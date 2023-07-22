@@ -28,11 +28,13 @@ class CaesarCipher:
   def __init__(self, _secret_number: int):
     if _secret_number == 0 or _secret_number > 26:
       raise Exception(f"{_secret_number} is out of range")
+    
     self.secret_number = _secret_number
 
-  def _encrypt(self, word: str) -> str:
-    word_as_lower_case = word.lower()
+  def encrypt(self, _word: str) -> str:
+    word_as_lower_case = _word.lower()
     new_word = ''
+
     for letter in word_as_lower_case:
       index = self.letters.index(letter)
       shift_value = index + self.num_of_shifts
@@ -44,9 +46,10 @@ class CaesarCipher:
       new_word += letter_at_index
     return new_word
 
-  def _decrypt(self, cipherText: str) -> str:
+  def decrypt(self, cipher_text: str) -> str:
     new_word = ''
-    for letter in cipherText:
+
+    for letter in cipher_text:
       index = self.letters.index(letter)
       unshift_value = index - self.num_of_shifts
       if unshift_value < 1:
@@ -57,18 +60,20 @@ class CaesarCipher:
       new_word += letter_at_index
     return new_word
 
-  def encrypt_sentence(self, sentence: str) -> str:
-    words = sentence.split(" ")
+  def encrypt_sentence(self, _sentence: str) -> str:
+    words = _sentence.split(" ")
     new_sentence = ''
+
     for word in words:
-      new_sentence += self._encrypt(word) + " "
+      new_sentence += self.encrypt(word) + " "
     return new_sentence
 
-  def decrypt_sentence(self, encrypted_sentence: str) -> str:
-    words = encrypted_sentence.split(" ")
+  def decrypt_sentence(self, _encrypted_sentence: str) -> str:
+    words = _encrypted_sentence.split(" ")
     new_sentence = ''
+
     for word in words:
-      new_sentence += self._decrypt(word) + " "
+      new_sentence += self.decrypt(word) + " "
     return new_sentence
 
 
