@@ -20,8 +20,9 @@ class One_Time_Pad:
 
     """
     STEPS:
-        1. Generate a list of random numbers the length of the word to be 
-        2. Shift every letter of the word by that secret number to get a cipher text
+        1. Generate a list of random numbers the length of the word to be encrypted.
+        2. Shift every letter of the word by the number mapped to them to get a cipher text. 
+           E.g love -> [21, 15, 14, 13] -> [(l, 21), (o, 15), (v, 14), (e, 13)]
         3. Reverse the process to get the original word
     """
 
@@ -29,7 +30,7 @@ class One_Time_Pad:
     "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
     ]
 
-    def generate_numbers(self, length: int) -> list:
+    def generate_numbers(self, length: int) -> list[int]:
         random_numbers = []
         for i in range(length):
             random_number = randint(1, 26)
