@@ -20,8 +20,8 @@ A collection of cryptographic techniques implemented from scratch in python.
 ### Modern Cryptography
 
 - [Simple Hashing](./simple_hashing.py)
-- [Diffie Hallman Key Exchange](./diffie_hellman.py)(WIP)
-- [RSA](./rsa.py)(WIP)
+- [Diffie Hallman Key Exchange](./diffie_hellman.py)
+- [RSA](./rsa.py) (WIP)
 - [Elliptic Curve Cryptography](./ecc.py)(Coming Soon)
 
 ## Usage
