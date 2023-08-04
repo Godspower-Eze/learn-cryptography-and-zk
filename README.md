@@ -9,6 +9,7 @@ A collection of cryptographic techniques implemented from scratch in python.
 ### Ancient Cryptography
 
 - [Ceasar Cipher](/caesar_cipher.py)
+- [Simple Substitution Cipher](/simple_substitution.py)
 - [Polyalphabetic Cipher](/polyaphabetic_cipher.py)
 
 ### 19th Century Cryptography
@@ -18,6 +19,7 @@ A collection of cryptographic techniques implemented from scratch in python.
 
 ### Modern Cryptography
 
+- [Simple Hashing](./simple_hashing.py)
 - [Diffie Hallman Key Exchange](./diffie_hellman.py)(WIP)
 - [RSA](./rsa.py)(WIP)
 - [Elliptic Curve Cryptography](./ecc.py)(Coming Soon)
