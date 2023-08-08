@@ -21,8 +21,8 @@ A collection of cryptographic techniques implemented from scratch in python.
 
 - [Simple Hashing](./simple_hashing.py)
 - [Diffie Hallman Key Exchange](./diffie_hellman.py)
-- [RSA](./rsa.py) (WIP)
-- [Elliptic Curve Cryptography](./ecc.py)(Coming Soon)
+- [RSA](./rsa.py)
+- [Elliptic Curve Diffie-Hellman Exchange](./ecdhe.py)(WIP)
 
 ## Usage
 

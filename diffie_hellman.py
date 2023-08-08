@@ -4,7 +4,10 @@ Diffie-hellman key exchange algorithm is cryptographic algorithm based on the di
 Given 3 ** e mod n = m. As the value of n gets larger it becomes increasingly hard to get the value of e that resulted in a known m. 
 That's the discrete logarithm problem. For sufficiently large prime n, a super computer can't get the value of e.
 
-This is why the Diffie-hellman key exchange is simple and powerful at the same time.
+This is why the Diffie-hellman key exchange is simple and powerful at the same time. 
+
+The goal of Diffie-hellman key exchange is to compute a shared secret between a sender and receiver. 
+The shared secret can later be used to further encryption and decryption of messages between them.
 """
 
 class DHKE:
@@ -18,8 +21,8 @@ class DHKE:
         5. The receiver generates a private key using a good random number generator denoted as `b`
         6. The sender computes g ** a mod n and sends publicly to the receiver. Denoted as A
         7. The receiver computes g ** b mod n and sends publicly to the sender. Denoted as B
-        8. The sender computes B ** a mod n and arrives at a secret S_1
-        9. The receiver computes A ** a mod n and arrives at a secret S_2
+        8. The sender computes B ** a mod n and arrives at a value S_1
+        9. The receiver computes A ** b mod n and arrives at a value S_2
         10. S_1 and S_2 should be equal making it the shared secret
     """
 
