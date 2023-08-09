@@ -15,7 +15,7 @@ class RSA:
         6. Decryption is achieved by computing N such that 1 <= N < n such that N  is congruent to (C ** d mod n). N is the original message
     """
 
-    def gcd(self, a: int, b: int) -> int:
+    def gcd_by_ea(self, a: int, b: int) -> int:
 
         """
         Computes the GCD of a and b using the Euclidean Algorithm
@@ -28,13 +28,15 @@ class RSA:
         else:
             return self.gcd(lower, mod)
         
-    def reverse_gcd(self, a: int, b: int) -> list[list[int]]:
+    def gcd_by_eea(self, a: int, b: int) -> list[list[int]]:
 
         """
         Computes the gcd and reverses the process to express
         the gcd as a linear combination in the form ax + by = gcd(a, b).
 
         The Extended Euclidean Algorithm is used here.
+
+        The value of x_1 and y_1 in the last row are the values of x and y respectively.
         """
 
         # Initial Values
@@ -60,16 +62,30 @@ class RSA:
             table.append(row)
 
         return table
-
-
-
-        
     
-        
+    def is_prime(self, num: int):
+        if num == 1:
+            return False
+        else:
+            known_primes = [2, 3, 5, 7]
+            if num in known_primes:
+                return True
+            else:
+                for i in known_primes:
+                    """
+                    According to the fundamental theorem of arithmetic, every positive
+                    number asides 1 can be expressed as a product of unique primes. Therefore,
+                    a prime number other than the `known_primes` shouldn't return 0 mod one of the
+                    known prime.
+                    """
+                    remainder = num % i
+                    if remainder == 0:
+                        return False
+        return True
+    
+    def phi_of_n(self, p: int, q: int):
 
-
-rsa = RSA()
-gcd = rsa.gcd(30, 77)
-r_gcd = rsa.reverse_gcd(30, 77)
-print(r_gcd)
+        """
+        This function assumes that p and q are primes
+        """
 
