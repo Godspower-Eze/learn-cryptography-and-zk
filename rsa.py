@@ -86,6 +86,22 @@ class RSA:
     def phi_of_n(self, p: int, q: int):
 
         """
-        This function assumes that p and q are primes
+        This function expects that p and q are primes.
+
+        The phi of any prime number p is p - 1. To find the phi of n where n is a 
+        product of two primes p, q can be computed as (phi of n = phi of p * phi of q). Therefore
+        n is equal to (p - 1) * (q - 1)
         """
+
+        p_is_prime = self.is_prime(p)
+        q_is_prime = self.is_prime(q)
+
+        if not p_is_prime:
+            raise Exception(f"{p} is not prime")
+        
+        if not q_is_prime:
+            raise Exception(f"{q} is not prime")
+        
+        phi_of_n = (p-1)(q-1)
+        return phi_of_n
 
