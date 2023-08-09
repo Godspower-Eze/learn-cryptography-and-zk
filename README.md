@@ -19,10 +19,10 @@ A collection of cryptographic techniques implemented from scratch in python.
 
 ### Modern Cryptography
 
-- [Simple Hashing](./simple_hashing.py)
+- [Simple Hashing](./simple_hashing.py) (WIP)
 - [Diffie Hallman Key Exchange](./diffie_hellman.py)
 - [RSA](./rsa.py)
-- [Elliptic Curve Diffie-Hellman Exchange](./ecdhe.py)(WIP)
+- [Elliptic Curve Diffie-Hellman Exchange](./ecdhe.py) (WIP)
 
 ## Usage
 
