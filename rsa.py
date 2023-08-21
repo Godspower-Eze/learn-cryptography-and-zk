@@ -145,9 +145,7 @@ n = rsa.n
 ## Alice generates her public and private key
 
 public_key = rsa.generate_public_key()
-print(public_key)
 private_key = rsa.generate_private_key(public_key)
-print(private_key)
 
 """
 Alice shares her public key and n public. Keeping p, q, ɸ(n) and her private key secret
