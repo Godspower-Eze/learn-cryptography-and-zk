@@ -103,6 +103,9 @@ class ECDH:
 
     def point_addition(self, a: tuple[int, int]| str, b: tuple[int, int] | str):
 
+        assert self.is_on_curve(a)
+        assert self.is_on_curve(b)
+
         x1 = a[0]
         x2 = b[0]
         y1 = a[1]
@@ -143,6 +146,8 @@ class ECDH:
         x3 = ((slope ** 2) - a[0] - b[0]) % self.curve.p
         y3 = (slope * (x1 - x3) - y1) % self.curve.p
         new_point = (x3, y3)
+        assert self.is_on_curve(new_point)
+
         return new_point
     
     def scalar_multiplication(self, z: int, point: tuple[int, int]| str):
@@ -151,6 +156,8 @@ class ECDH:
         A=zG computed using the double and add algorithm (https://www.youtube.com/watch?v=5ITRACsmCvQ). 
         Where z is the multiple and G is the `point` argument
         """
+
+        assert self.is_on_curve(point)
 
         if z % self.curve.n == 0 or point == self.point_at_infinity:
             return self.point_at_infinity
@@ -169,6 +176,8 @@ class ECDH:
             addend = self.point_addition(addend, addend)
 
             z >>= 1
+        
+        assert self.is_on_curve(result)
 
         return result
     
