@@ -1,5 +1,5 @@
-
 from random import randint
+from utils import gcd_by_ea, gcd_by_eea
 
 class RSA:
 
@@ -11,7 +11,7 @@ class RSA:
            ɸ(n) is the phi of n (the number of integers from 1 to n that doesn't share a common factor with n),
            gcd is the greatest common divisor
         4. Compute `d` such that 1 < d < ɸ(n) so that d is congruent to ((1 mod ɸ(n)))/e. d can be gotten by solving the linear congruence equation. 
-           In other words, `d` is the multiplicative inverse of (e congruent to 1 mod ɸ(n)).
+           In other words, `d` is the multiplicative inverse of e mod ɸ(n) (ed congruent to 1 mod ɸ(n)).
         4. Share n and e publicly. e is the encryption key and n is the modulus
         5. Encryption is achieved by computing C = M ** e mod n where M is the message and C is encrypted message
         6. Decryption is achieved by computing N such that 1 <= N < n such that N = (C ** d mod n). N is the original message
@@ -37,54 +37,6 @@ class RSA:
         self.p = p
         self.q = q
         self.n = p * q
-
-    def gcd_by_ea(self, a: int, b: int) -> int:
-
-        """
-        Computes the GCD of a and b using the Euclidean Algorithm
-        """
-
-        higher, lower = max(a, b), min(a, b)
-        mod = higher % lower
-        while mod != 0:
-            higher, lower = lower, mod
-            mod = higher % lower
-        return lower
-        
-    def gcd_by_eea(self, a: int, b: int) -> list[list[int]]:
-
-        """
-        Computes the gcd and reverses the process to express
-        the gcd as a linear combination in the form ax + by = gcd(a, b).
-
-        The Extended Euclidean Algorithm is used here.
-
-        The value of x_1 and y_1 in the last row are the values of x and y respectively.
-        """
-
-        # Initial Values
-        a, b = [max(a, b), min(a, b)]
-        q = a // b # quotient
-        r = a % b # remainder
-        x_0, x_1 = 1, 0 
-        x = x_0 - (x_1 * q)
-        y_0, y_1 = 0, 1
-        y = y_0 - (y_1 * q)
-
-        table = [["q", "a", "b", "r", "x_0", "x_1", "x", "y_0", "y_1", "y"], [q, a, b, r, x_0, x_1, x, y_0, y_1, y]]
-
-        while r != 0:
-            a, b = b, r
-            q = a // b
-            r = a % b 
-            x_0, x_1 = x_1, x 
-            x = x_0 - (x_1 * q)
-            y_0, y_1 = y_1, y
-            y = y_0 - (y_1 * q)
-            row = [q, a, b, r, x_0, x_1, x, y_0, y_1, y]
-            table.append(row)
-
-        return table
     
     def is_prime(self, num: int) -> bool:
         if num == 1:
@@ -130,11 +82,11 @@ class RSA:
 
         phi_of_n = self.phi_of_n()
         random_number = randint(2, phi_of_n)
-        gcd = self.gcd_by_ea(random_number, phi_of_n) 
+        gcd = gcd_by_ea(random_number, phi_of_n) 
         
         while gcd != 1:
             random_number = randint(2, phi_of_n)
-            gcd = self.gcd_by_ea(random_number, phi_of_n)
+            gcd = gcd_by_ea(random_number, phi_of_n)
 
         e = random_number
         return e
@@ -150,12 +102,12 @@ class RSA:
         """
 
         phi_of_n = self.phi_of_n()
-        gcd = self.gcd_by_ea(e, phi_of_n)
+        gcd = gcd_by_ea(e, phi_of_n)
 
         if gcd != 1:
             raise Exception("e is invalid")
         
-        table = self.gcd_by_eea(e, phi_of_n)
+        table = gcd_by_eea(e, phi_of_n)
         mi = table[-1][8] % phi_of_n
         d = mi
         return d
