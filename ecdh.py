@@ -40,7 +40,10 @@ class ECDH:
     """
     Steps:
         1. Choose a elliptic curve. E.g secp256k1, curve25519
-        2. Every curve has known domain parameters
+        2. Alice generate key pair and shares the public key with Bob
+        3. Bob generate key pair and shares the public key with Bob
+        4. Alice performs a scalar multiplication using her private key and Bob's public key to get a secret key
+        4. Bob performs a scalar multiplication using her private key and Alice's public key to the same secret key
     """
 
     curve = None
