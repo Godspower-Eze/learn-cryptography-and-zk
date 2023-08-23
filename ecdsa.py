@@ -8,6 +8,8 @@ verify without reasonable doubt that you are the signer without knowing the priv
 used in signing it.
 
 ECDSA is a built on the power of Elliptic Curve Cryptography; its discrete logarithm problem precisely.
+
+This is the used in the Bitcoin blockchain.
 """
 
 import collections
