@@ -22,11 +22,19 @@ It's domain parameters are listed below:
     h: 0x1
 
     `p` is the prime of the curve and it would used as the modulus.
+
     `a` and `b` are constants
+
     `G` is the base point, generator and the starting point. It is the point on the curve where other points would be generated from.
         Either by addition or scalar multiplication.
-    `n` is the order of the subgroup of Integers mod p. That is, the number of valid points in the curve when 
-        the equation mod p (y**2 mod p = (x**3 + ax + b) mod p) is  used to check each point on the curve.
+
+    `n` is the order of the generator point `G`. That is, the smallest positive integer such that nG equals to the identity element.
+        The identity element of an elliptic curve is the point at infinity which is a line cuts only two point vertically.
+
+        To verify this, perform a scalar multiplication (see below) of `n` and `G` you should get the point at infinity
+
+        Research on `order of an element in a group` to learn more.
+
     `h` is the ratio of number of the points on the curve and n which is ideally 1.
 """
 
@@ -35,7 +43,7 @@ import random
 
 from utils import gcd_by_eea
 
-class ECDH:
+class ECC:
 
     """
     Steps:
@@ -82,7 +90,7 @@ class ECDH:
 
         dividend = (y2 - y1) % self.curve.p
         divisor = (x2 - x1) % self.curve.p
-        mi = gcd_by_eea(divisor, self.curve.p)[-1][8] # multiplicative inverse mod p
+        mi = gcd_by_eea(divisor, self.curve.p)[-1][8] % self.curve.p # multiplicative inverse mod p
         return (dividend * mi) % self.curve.p
     
     def slope_for_point_doubling(self, x1: int, y1: int):
@@ -97,7 +105,7 @@ class ECDH:
 
         dividend = ((3 * (x1 ** 2)) + self.curve.a) % curve.p
         divisor = (2 * y1) % self.curve.p
-        mi = gcd_by_eea(divisor, self.curve.p)[-1][8] # multiplicative inverse mod p
+        mi = gcd_by_eea(divisor, self.curve.p)[-1][8] % self.curve.p # multiplicative inverse mod p
         return (dividend * mi) % self.curve.p
 
 
@@ -187,7 +195,7 @@ class ECDH:
         Generates a random private-public key pair
         """
 
-        private_key = random.randrange(1, self.curve.p)
+        private_key = random.randrange(1, self.curve.n)
         public_key = self.scalar_multiplication(private_key, self.curve.g)
         return (private_key, public_key)
             
@@ -215,7 +223,7 @@ curve = EllipticCurve(
     h=1,
 )
 
-ecdh = ECDH(curve)
+ecdh = ECC(curve)
 
 ## Alice Generates key pair and shares public key with bob
 alice_private_key, alice_public_key = ecdh.generate_key_pair()

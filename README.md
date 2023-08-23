@@ -23,7 +23,7 @@ A collection of cryptographic techniques implemented from scratch in python.
 - [Diffie Hallman Key Exchange](./diffie_hellman.py)
 - [RSA](./rsa.py)
 - [Elliptic Curve Diffie-Hellman (ECDH)](./ecdh.py)
-- [Elliptic Curve Digital Signature Algorithm (ECDSA)](./ecdsa.py) (WIP)
+- [Elliptic Curve Digital Signature Algorithm (ECDSA)](./ecdsa.py)
 - [Edwards-curve Digital Signature Algorithm (EdDSA)](./eddsa.py) (WIP)
 - [BLS Signature](./bls_sig.py) (WIP)
 - [Schnorr Signature](./schnorr_sig.py) (WIP)
