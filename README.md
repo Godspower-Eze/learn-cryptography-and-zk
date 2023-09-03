@@ -27,7 +27,7 @@ A collection of cryptographic techniques implemented from scratch in python.
 - [Edwards-curve Digital Signature Algorithm (EdDSA)](/signatures/eddsa.py) (WIP)
 - [BLS Signature](/signatures/bls_sig.py) (WIP)
 - [Schnorr Signature](/signatures/schnorr_sig.py) (WIP)
-- [Pedersen Commitments using Modular Exponentiation](/commitments/pedcomm_mod.py) (WIP)
+- [Pedersen Commitments using Modular Exponentiation](/commitments/pedcomm_mod.py)
 - [Pedersen Commitments using Elliptic Curve Cryptography](/commitments/pedcomm_ecc.py) (WIP)
 
 ## Usage
