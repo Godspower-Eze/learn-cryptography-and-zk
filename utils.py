@@ -45,3 +45,5 @@ def gcd_by_eea(a: int, b: int) -> list[list[int]]:
             table.append(row)
 
         return table
+
+

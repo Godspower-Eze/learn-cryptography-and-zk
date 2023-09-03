@@ -15,7 +15,7 @@ This is the used in the Bitcoin blockchain.
 import collections
 import random
 
-from ecdh import ECC, gcd_by_eea
+from ecc.ecdh import ECC, gcd_by_eea
 
 class ECDSA(ECC):
 

@@ -8,7 +8,7 @@ Why XOR?
 
 from random import randint
 
-import one_time_pad
+import ciphers.one_time_pad as one_time_pad
 
 class XOR_One_Time_Pad(one_time_pad.One_Time_Pad):
 
