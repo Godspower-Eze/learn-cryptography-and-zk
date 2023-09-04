@@ -19,10 +19,10 @@ A collection of cryptographic techniques implemented from scratch in python.
 
 ### Modern Cryptography
 
-- [Simple Hashing](/commitments/hashing/simple_hashing.py) (WIP)
-- [Diffie Hallman Key Exchange](./diffie_hellman.py)
+- [Simple Hashing](/commitments/simple_hashing.py) (WIP)
+- [Diffie Hallman Key Exchange](/key_exchange/diffie_hellman.py)
 - [RSA](./rsa.py)
-- [Elliptic Curve Diffie-Hellman (ECDH)](/ecc/ecdh.py)
+- [Elliptic Curve Diffie-Hellman (ECDH)](/key_exchange/ecdh.py)
 - [Elliptic Curve Digital Signature Algorithm (ECDSA)](/signatures/ecdsa.py)
 - [Edwards-curve Digital Signature Algorithm (EdDSA)](/signatures/eddsa.py) (WIP)
 - [BLS Signature](/signatures/bls_sig.py) (WIP)
@@ -32,4 +32,4 @@ A collection of cryptographic techniques implemented from scratch in python.
 
 ## Usage
 
-This serves as a learning material for me in my journey to learning cryptography. I hope it helps you learn as well.
+This serves as a learning material for me in my journey to becoming a god at cryptography. I hope it helps you learn as well.

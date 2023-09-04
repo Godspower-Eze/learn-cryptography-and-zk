@@ -1,6 +1,4 @@
 """
-Elliptic Curve Diffie-Hellman is more secure type of Diffie-Hellman.
-
 Recall that the security of Diffie-Hellman lies in the fact that given m ** e mod n = c, it's hard to find `e` for
 a sufficiently large `n` and we called this the discrete logarithm problem. Well, elliptic curves gives us another 
 form of a discrete logarithm problem.
@@ -38,10 +36,9 @@ It's domain parameters are listed below:
     `h` is the ratio of number of the points on the curve and n which is ideally 1.
 """
 
-import collections
 import random
 
-from utils import gcd_by_eea
+from .number_theory import gcd_by_eea
 
 class ECC:
 
@@ -103,7 +100,7 @@ class ECC:
             s = (((3 * (x1 ** 2) + a) mod p) * ((2y1) ** -1) mod p) mod p
         """
 
-        dividend = ((3 * (x1 ** 2)) + self.curve.a) % curve.p
+        dividend = ((3 * (x1 ** 2)) + self.curve.a) % self.curve.p
         divisor = (2 * y1) % self.curve.p
         mi = gcd_by_eea(divisor, self.curve.p)[-1][8] % self.curve.p # multiplicative inverse mod p
         return (dividend * mi) % self.curve.p
@@ -199,43 +196,3 @@ class ECC:
         public_key = self.scalar_multiplication(private_key, self.curve.g)
         return (private_key, public_key)
             
-
-
-## USAGE
-
-EllipticCurve = collections.namedtuple('EllipticCurve', 'name p a b g n h')
-
-## Set the domain parameters specific to the curve
-
-curve = EllipticCurve(
-    'secp256k1',
-    # Field characteristic.
-    p=0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f,
-    # Curve coefficients.
-    a=0,
-    b=7,
-    # Base point.
-    g=(0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
-       0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8),
-    # Subgroup order.
-    n=0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141,
-    # Subgroup cofactor.
-    h=1,
-)
-
-ecdh = ECC(curve)
-
-## Alice Generates key pair and shares public key with bob
-alice_private_key, alice_public_key = ecdh.generate_key_pair()
-
-## Bob Generates key pair and shares public key with alice
-bob_private_key, bob_public_key = ecdh.generate_key_pair()
-
-## Alice computes the scalar multiplication of her private key and Bob's public key to get a shared secret
-alice_shared_secret = ecdh.scalar_multiplication(alice_private_key, bob_public_key)
-
-## Bob computes the scalar multiplication of his private key and Alice's public key to get a shared secret
-bob_shared_secret = ecdh.scalar_multiplication(bob_private_key, alice_public_key)
-
-## The both shared secret should be equal
-assert(alice_shared_secret == bob_shared_secret)

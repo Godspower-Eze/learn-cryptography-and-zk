@@ -1,5 +1,5 @@
 from random import randint
-from utils import gcd_by_ea, gcd_by_eea
+from utils.number_theory import gcd_by_ea, gcd_by_eea
 
 class RSA:
 

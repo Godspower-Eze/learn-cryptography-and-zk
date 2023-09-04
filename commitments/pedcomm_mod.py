@@ -12,6 +12,8 @@ Hashing is a common type of commitment. A Pedersen Commitment is also a type of 
 There many different variation of a Pedersen Commitments. In this implementation, we would work on the most
 common type which has to do with modular exponentiation. Others include elliptic curve cryptography and vector commitments
 
+The strength of Pedersen commitments lies in the discrete log problem.
+
 A unique property of Pedersen Commitments is its homomorphic property which simply means that the commitment of the addtion of
 two messages m1 and m2 is equal to the multiplication of there individual commitments. That is,
     commit(m1) * commit(m2) = commit(m1 + m2)
@@ -19,11 +21,7 @@ two messages m1 and m2 is equal to the multiplication of there individual commit
 
 import random
 
-import sympy
-
-
-def generate_prime(min: int, max: int):
-      return sympy.randprime(min, max)
+from utils.number_theory import generate_random_prime 
 
 class Ped_Mod:
 
@@ -55,7 +53,7 @@ class Ped_Mod:
     h = None
 
     def __init__(self, p) -> None:
-        q = generate_prime(1, p)
+        q = generate_random_prime(1, p)
         g = random.randrange(1, q - 1)
         s = random.randrange(1, q - 1)
         h = (g ** s) % q
@@ -107,17 +105,22 @@ c, m, r = ped_mod.commit(m, q, g, h)
 status = ped_mod.open(m, c, r)
 assert(status)
 
-## SHOWING THE HOMOMORPHIC PROPERTY OF PEDERSEN COMMITMENT
+#### SHOWING THE HOMOMORPHIC PROPERTY OF PEDERSEN COMMITMENT
 
 m1 = 100 # message 1
 m2 = 200 # message 2
-
+m3 = 200 # message 3
+m4 = 200 # message 4
+m5 = 200 # message 5
 
 c1, m_1, r_1 = ped_mod.commit(m1, q, g, h)
 c2, m_2, r_2 = ped_mod.commit(m2, q, g, h)
+c3, m_3, r_3 = ped_mod.commit(m3, q, g, h)
+c4, m_4, r_4 = ped_mod.commit(m4, q, g, h)
+c5, m_5, r_5 = ped_mod.commit(m5, q, g, h)
 
-comms_mul = ped_mod.mul_comm(c1, c2)
-m3 = m1 + m2
+comms_mul = ped_mod.mul_comm(c1, c2, c3, c4, c5)
+m6 = m1 + m2 + m3 + m4 + m5
 
-status = ped_mod.open(m3, comms_mul, r_1, r_2)
+status = ped_mod.open(m6, comms_mul, r_1, r_2, r_3, r_4, r_5)
 assert(status)

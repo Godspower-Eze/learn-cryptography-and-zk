@@ -1,3 +1,5 @@
+import sympy
+
 def gcd_by_ea(a: int, b: int) -> int:
 
         """
@@ -47,3 +49,5 @@ def gcd_by_eea(a: int, b: int) -> list[list[int]]:
         return table
 
 
+def generate_random_prime(min: int, max: int):
+      return sympy.randprime(min, max)
