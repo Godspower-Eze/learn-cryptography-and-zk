@@ -35,8 +35,8 @@ class Ped_Mod:
                 4. The values q, g and h are sent to the prover
             
             Opening:
-                1. The prover sends to message `m_i` and the random numbers `r_0` to `r_i`
-                2. The verifier computes c_i = ((g ** m_i)(h ** summation(r_i)) mod q)
+                1. The prover sends the commitment `c`, message `m_i` and the random number `r_i`
+                2. The verifier computes c_i = ((g ** m_i)(h ** r_i) mod q)
                 3. If c is equal to c_i then the message is valid else it's not.
                 4. Note: The message and the random number are denoted `m_i` and `r_i` respectively because of cases where
                    the prover is a malicious prover and (m, r) would not be equal to (m_i, r_i)
@@ -45,7 +45,7 @@ class Ped_Mod:
             1. message `m` in [1, q - 1]
             2. Pick a random number `r` in [1, q - 1]
             3. To get the commitment, compute `c` = ((g ** m)(h ** r) mod q)
-            4. The commitment c is sent to the verifier
+            4. The commitment `c`, the message `m` and the random number `r` is sent to the verifier for opening
     """
 
     q = None
