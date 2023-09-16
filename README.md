@@ -34,6 +34,11 @@ A collection of cryptographic techniques implemented from scratch in python.
 - [Basic Trusted Setup](./commitments/basic_trusted_setup.py)(WIP)
 - [KZG Polynomial Commitments](/commitments/kzg.py)(WIP)
 
+#### Utils
+
+- [Number Theory](/utils/number_theory.py)
+- [Elliptic Curves](/utils/ecc.py)
+
 ## Usage
 
 This serves as a learning material for me in my journey to becoming a god at cryptography. I hope it helps you learn as well.
