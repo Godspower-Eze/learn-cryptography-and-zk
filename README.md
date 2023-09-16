@@ -30,6 +30,9 @@ A collection of cryptographic techniques implemented from scratch in python.
 - [Pedersen Commitments using Modular Exponentiation](/commitments/pedcomm_mod.py)
 - [Pedersen Commitments using Elliptic Curve Cryptography](/commitments/pedcomm_ecc.py)
 - [Pedersen Commitments + Inner Product Argument](/commitments/pedcomm_ipa.py) (WIP)
+- [Basic Polynomial Commitment](/commitments/basic_polynomial_comm.py)(WIP)
+- [Basic Trusted Setup](./commitments/basic_trusted_setup.py)(WIP)
+- [KZG Polynomial Commitments](/commitments/kzg.py)(WIP)
 
 ## Usage
 
