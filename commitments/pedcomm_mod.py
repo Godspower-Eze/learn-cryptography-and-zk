@@ -3,20 +3,25 @@ A commitment scheme is a technique for committing to values to be verified at a 
 
 It's like an sealed envelope. You put a value inside and send to a verifier. The verifier shouldn't be able to see what
 is contained inside (hiding) and at the time of opening the verifier showed to able to ascertain with all certainty
-that the values contained hasn't been tampered with by the sender (binding). 
+that the values contained hasn't been tampered with (binding). 
 
-hiding and binding are important properties of an commitment scheme.
+hiding and binding are important properties of any commitment scheme.
 
 Hashing is a common type of commitment. A Pedersen Commitment is also a type of commitment scheme.
 
 There many different variation of a Pedersen Commitments. In this implementation, we would work on the most
-common type which has to do with modular exponentiation. Others include elliptic curve cryptography and vector commitments
+common type which has to do with modular exponentiation. Others include using elliptic curve cryptography and using Inner Product Argument as the verification mechanism.
 
 The strength of Pedersen commitments lies in the discrete log problem.
 
 A unique property of Pedersen Commitments is its homomorphic property which simply means that the commitment of the addtion of
 two messages m1 and m2 is equal to the multiplication of there individual commitments. That is,
     commit(m1) * commit(m2) = commit(m1 + m2)
+
+A Pedersen Commitment can also be used as a Vector Commitment Scheme.
+
+Vector Commitments Scheme are used to describe commitments that are perform on a set of values rather than a single value. Examples include Merkle Tries
+and Polynomial Commitments(./polynomials/basic_polynomial_comm_using_mod.py)
 """
 
 import random
