@@ -1,3 +1,9 @@
+"""
+This is same polynomial commitment scheme implemented in (./basic_polynomial_comm_using_mod.py) but using elliptic curve operations.
+
+See (/basic_polynomial_comm_using_mod.py) for detailed explanation
+"""
+
 import collections
 
 from numpy.polynomial.polynomial import polydiv
