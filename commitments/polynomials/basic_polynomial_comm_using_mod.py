@@ -100,7 +100,7 @@ Let's fix the above protocol:
             the encrypted exponents of x times a: [((g ** (r ** 0) * a) mod n), ((g ** (r ** 1) * a) mod n), ..., ((g ** (r ** d) * a) mod n)].
             These would help us hide x and also check that right polynomial is used respectively. And, these are sent to the prover
 
-            5. The verifier computes t(x)
+            5. The verifier computes t(x) (unencrypted)
 
         Prover:
             1. Gets the encrypted values from the verifier (encrypted exponents of `x` and encrypted exponents of `x times a`)
@@ -136,6 +136,7 @@ Let's fix the above protocol:
 
 from numpy.polynomial.polynomial import polydiv
 
+from utils.number_theory import generate_random_prime
 
 class PolyComm_Mod:
 
@@ -158,6 +159,14 @@ class PolyComm_Mod:
         for i in values:
             multiple = (multiple * i) % self.n
         return multiple
+    
+    def __summation__(self, values: list[int]):
+        assert len(values)  == self.d + 1, "wrong degree"
+
+        sum = 0
+        for i in values:
+            sum = (sum + i)
+        return sum
 
     """
     VERIFIER    
@@ -167,31 +176,31 @@ class PolyComm_Mod:
 
         assert len(t_of_x)  == self.d + 1, "wrong degree"
 
-        encrypted_terms = [] ## [((g ** (r ** 0)) mod n), ((g ** (r ** 1)) mod n), ..., ((g ** (r ** d)) mod n)]
+        encrypted_terms = [] ## [((g ** (x ** 0)) mod n), ((g ** (x ** 1)) mod n), ..., ((g ** (x ** d)) mod n)]
 
         for i in range(0, self.d + 1):
             value = pow(self.g, s ** i, self.n)
             encrypted_terms.append(value)
 
-        encrypted_terms_with_a = [] ## [((g ** (r ** 0) * a) mod n), ((g ** (r ** 1) * a) mod n), ..., ((g ** (r ** d) * a) mod n)]
+        encrypted_terms_with_a = [] ## [((g ** (x ** 0) * a) mod n), ((g ** (x ** 1) * a) mod n), ..., ((g ** (x ** d) * a) mod n)]
         for i in range(0, self.d + 1):
             value = pow(self.g, (s ** i) * self.a, self.n)
             encrypted_terms_with_a.append(value)
 
         t_at_s = []
         for i in range(0, self.d + 1):
-            value = t_of_x[0] * (s ** i)
+            value = t_of_x[i] * (s ** i)
             t_at_s.append(value)
-
-        eval_of_t_at_s = self.__product__(t_at_s)
+        
+        eval_of_t_at_s = self.__summation__(t_at_s)
         
         return encrypted_terms, encrypted_terms_with_a, eval_of_t_at_s
     
     def check_polynomial(self, eval_of_f: int, eval_of_f_prime: int) -> bool:
-        return ((eval_of_f ** self.a) % self.n) == eval_of_f_prime
+        return pow(eval_of_f, self.a, self.n) == eval_of_f_prime
     
-    def check_knowledge_of_polynomial(self, eval_of_t: int, eval_of_f: int, eval_of_h: int) -> bool:
-        return ((eval_of_h ** eval_of_t) % self.n) == eval_of_f
+    def check_knowledge_of_polynomial(self, eval_of_h: int, eval_of_t: int, eval_of_f: int) -> bool:
+        return pow(eval_of_h, eval_of_t, self.n) == eval_of_f
 
 
     """
@@ -213,14 +222,14 @@ class PolyComm_Mod:
 
         if len_of_quotient != self.d:
             diff = self.d - len_of_quotient
-            padding = [0.0 for i in range(0, diff + 1)]
+            padding = [0.0 for _ in range(0, diff + 1)]
             quotient = quotient + padding
         h_of_x = quotient
         
         evals_of_f = [pow(i, j, self.n) for i, j in zip(encrypted_terms, f_of_x)]
         eval_of_f = self.__product__(evals_of_f)
 
-        evals_of_f_prime = [pow(i, j, self.n) for i, j in zip(encrypted_terms, f_of_x)]
+        evals_of_f_prime = [pow(i, j, self.n) for i, j in zip(encrypted_terms_with_a, f_of_x)]
         eval_of_f_prime = self.__product__(evals_of_f_prime)
 
         evals_of_h = [pow(i, int(j), self.n) for i, j in zip(encrypted_terms, h_of_x)]
@@ -248,8 +257,10 @@ n = 11
 
 poly_mod = PolyComm_Mod(d, g, n, a)
 
+s = generate_random_prime(1, 0xffff)
+
 ## SETUP (By Verifier)
-encrypted_terms, encrypted_terms_with_a, eval_of_t = poly_mod.setup(3, [2, -3, 1, 0])
+encrypted_terms, encrypted_terms_with_a, eval_of_t = poly_mod.setup(s, [2, 3, 1, 0])
 
 ## EVALUATION (By Prover)
 coefficients_of_f = [-6, -7, 0, 1]
@@ -262,5 +273,5 @@ status = poly_mod.check_polynomial(eval_of_f, eval_of_f_prime)
 assert(status)
 
 ## CHECKING POLYNOMIAL FOR KNOWLEDGE OF POLYNOMIAL (By Verifier)
-status = poly_mod.check_knowledge_of_polynomial(eval_of_t, eval_of_f, eval_of_h)
+status = poly_mod.check_knowledge_of_polynomial(eval_of_h, eval_of_t, eval_of_f)
 assert(status)

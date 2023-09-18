@@ -21,7 +21,7 @@ two messages m1 and m2 is equal to the multiplication of there individual commit
 A Pedersen Commitment can also be used as a Vector Commitment Scheme.
 
 Vector Commitments Scheme are used to describe commitments that are perform on a set of values rather than a single value. Examples include Merkle Tries
-and Polynomial Commitments(./polynomials/basic_polynomial_comm_using_mod.py)
+and Polynomial Commitments(./polynomials/basic_polynomial_comm_using_mod)
 """
 
 import random
