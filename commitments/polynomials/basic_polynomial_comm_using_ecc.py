@@ -15,15 +15,11 @@ class PolyComm_ECC(ECC):
 
     d = None # degree
     g = None # generator
-    n = None # modulus
-    a = None 
 
-    def __init__(self, curve, d: int, a: int) -> None:
+    def __init__(self, curve, d: int) -> None:
         super().__init__(curve)
         self.d = d
-        self.a = a
         self.g = curve.g
-        self.n = curve.n
     
     def __encrypted_summation__(self, values: list[tuple[int, int]]):
         assert len(values)  == self.d + 1, "wrong degree"
@@ -45,32 +41,32 @@ class PolyComm_ECC(ECC):
     VERIFIER    
     """
 
-    def setup(self, s: int, t_of_x: list[int]) -> (list[int], list[int], int):
+    def setup(self, x: int, a: int, t_of_x: list[int]) -> (list[int], list[int], int):
 
         assert len(t_of_x)  == self.d + 1, "wrong degree"
 
-        encrypted_terms = [] ## [((r ** 0) * G), ((r ** 1) * G), ..., ((r ** d) * G)]
+        encrypted_terms = [] ## [((x ** 0) * G), ((x ** 1) * G), ..., ((x ** d) * G)]
         
         for i in range(0, self.d + 1):
-            value = self.scalar_multiplication(s ** i, self.g)
+            value = self.scalar_multiplication(x ** i, self.g)
             encrypted_terms.append(value)
 
-        encrypted_terms_with_a = [] ## [(((r ** 0) * a) * G), (((r ** 1) * a) * G), ..., (((r ** 0) * d) * G)]
+        encrypted_terms_with_a = [] ## [(((x ** 0) * a) * G), (((x ** 1) * a) * G), ..., (((x ** 0) * d) * G)]
         for i in range(0, self.d + 1):
-            value = self.scalar_multiplication((s ** i) * self.a, self.g)
+            value = self.scalar_multiplication((x ** i) * a, self.g)
             encrypted_terms_with_a.append(value)
 
-        t_at_s = []
+        t_at_x = []
         for i in range(0, self.d + 1):
-            value = t_of_x[i] * (s ** i)
-            t_at_s.append(value)
+            value = t_of_x[i] * (x ** i)
+            t_at_x.append(value)
 
-        eval_of_t_at_s = self.__unencrypted_summation__(t_at_s)
+        eval_of_t_at_x = self.__unencrypted_summation__(t_at_x)
         
-        return encrypted_terms, encrypted_terms_with_a, eval_of_t_at_s
+        return encrypted_terms, encrypted_terms_with_a, eval_of_t_at_x
     
-    def check_polynomial(self, eval_of_f: int, eval_of_f_prime: int) -> bool:
-        return self.scalar_multiplication(self.a, eval_of_f) == eval_of_f_prime
+    def check_polynomial(self, a: int, eval_of_f: int, eval_of_f_prime: int) -> bool:
+        return self.scalar_multiplication(a, eval_of_f) == eval_of_f_prime
     
     def check_knowledge_of_polynomial(self, eval_of_h: int, eval_of_t: int, eval_of_f: int) -> bool:
         return self.scalar_multiplication(eval_of_t, eval_of_h) == eval_of_f
@@ -140,16 +136,16 @@ curve = EllipticCurve(
 )
 
 ## Secret
-a = 8
+x = generate_random_prime(1, 0xffff)
+a = generate_random_prime(1, 0xffff)
+
+## Public
 d = 3
 
-poly_ecc = PolyComm_ECC(curve, d, a)
-
-s = generate_random_prime(1, 0xffff)
-# s = 4
+poly_ecc = PolyComm_ECC(curve, d)
 
 ## SETUP (By Verifier)
-encrypted_terms, encrypted_terms_with_a, eval_of_t = poly_ecc.setup(s, [2, 3, 1, 0])
+encrypted_terms, encrypted_terms_with_a, eval_of_t = poly_ecc.setup(x, a, [2, 3, 1, 0])
 
 ## EVALUATION (By Prover)
 coefficients_of_f = [-6, -7, 0, 1]
@@ -158,7 +154,7 @@ coefficients_of_t = [2, 3, 1, 0]
 eval_of_f, eval_of_f_prime, eval_of_h = poly_ecc.evaluate(encrypted_terms, encrypted_terms_with_a, coefficients_of_f, coefficients_of_t)
 
 ## CHECKING POLYNOMIAL FOR CORRECT POLYNOMIAL (By Verifier)
-status = poly_ecc.check_polynomial(eval_of_f, eval_of_f_prime)
+status = poly_ecc.check_polynomial(a, eval_of_f, eval_of_f_prime)
 assert(status)
 
 # CHECKING POLYNOMIAL FOR KNOWLEDGE OF POLYNOMIAL (By Verifier)
