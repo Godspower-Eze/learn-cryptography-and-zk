@@ -1,6 +1,6 @@
 """
 In our implementations of a Basic Polynomial Commitments; using Modular Exponentiation (./basic_polynomial_comm_using_mod.py) and
-using Elliptic Curve Cryptography(./basic_polynomial_comm_using_ecc.py) we had a setup phase where the computed the encrypted values 
+using Elliptic Curve Cryptography(./basic_polynomial_comm_using_ecc.py) we had a setup phase where the verifier computed the encrypted values 
 to be used by the prover.
 
 There's a problem with this. We have to trust the verifier. In a situation where the proof by the prover would be used 
