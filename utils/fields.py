@@ -1,6 +1,11 @@
 import copy
 
+
 class Field:
+
+    """
+    A generic implementation of a finite field
+    """
     
     value: int = None
     modulus: int = None
@@ -50,10 +55,10 @@ class Field:
             bytes_little_endian, byteorder='little')
         return Field(value, modulus)
     
-    def lexographically_largest(x: 'Field', q_min_one_div_2: int):
+    def lexographically_largest(x: 'Field', q_min_one_div_2: int) -> bool:
         return x.value > q_min_one_div_2
 
-    def string(self):
+    def string(self) -> str:
         return str(self.value)
     
     def add(self, a: 'Field', b: 'Field') -> 'Field':
@@ -110,19 +115,19 @@ class Field:
 
         return outputs
     
-    def sqrt(self, a: 'Field'):
+    def sqrt(self, a: 'Field') -> 'Field':
         self._check_all_integers_same_modulus(a, a)
         self.value = modular_sqrt(a.value, self.modulus)
         if self.value is None:
             return None
         return self
     
-    def exp(self, a: 'Field', exponent: int):
+    def exp(self, a: 'Field', exponent: int) -> 'Field':
         self._check_all_integers_same_modulus(a, a)
         self.value = pow(a.value, exponent, self.modulus)
         return self
     
-    def legendre(self):
+    def legendre(self) -> int:
         return legendre_symbol(self.value, self.modulus)
     
     def div(self, a: 'Field', b: 'Field') -> 'Field':
