@@ -1,53 +1,53 @@
-# cryptographic techniques
+# Cryptographic Techniques
 
-## overview
+## Overview
 
-a collection of cryptographic techniques implemented from scratch in python.
+A collection of cryptographic techniques implemented from scratch in python.
 
-## techniques
+## Techniques
 
-### ancient cryptography
+### Ancient Cryptography
 
-- [ceasar cipher](/ciphers/caesar_cipher.py)
-- [simple substitution cipher](/ciphers/simple_substitution.py)
-- [polyalphabetic cipher](/ciphers/polyaphabetic_cipher.py)
+- [Ceasar Cipher](/ciphers/caesar_cipher.py)
+- [Simple Substitution Cipher](/ciphers/simple_substitution.py)
+- [Polyalphabetic Cipher](/ciphers/polyaphabetic_cipher.py)
 
-### 19th century cryptography
+### 19th Century Cryptography
 
-- [one time pad](/ciphers/one_time_pad.py)
-- [XOR + one time pad](/ciphers/xor_and_one_time_pad.py)
+- [One Time Pad](/ciphers/one_time_pad.py)
+- [XOR + One Time Pad](/ciphers/xor_and_one_time_pad.py)
 
-### modern cryptography
+### Modern Cryptography
 
-- [simple hashing](/commitments/simple_hashing.py) (WIP)
-- [diffie hellman key exchange](/key_exchange/diffie_hellman.py)
+- [Simple Hashing](/commitments/simple_hashing.py) (WIP)
+- [Diffie Hallman Key Exchange](/key_exchange/diffie_hellman.py)
 - [RSA](./rsa.py)
-- [elliptic curve diffie-hellman (ECDH)](/key_exchange/ecdh.py)
-- [elliptic curve digital signature algorithm (ECDSA)](/signatures/ecdsa.py)
-- [edwards-curve digital signature algorithm (EdDSA)](/signatures/eddsa.py) (WIP)
-- [BLS signature](/signatures/bls_sig.py) (WIP)
-- [schnorr signature](/signatures/schnorr_sig.py) (WIP)
-- [pedersen commitments using modular exponentiation](/commitments/pedcomm_mod.py)
-- [pedersen commitments using elliptic curve cryptography](/commitments/pedcomm_ecc.py)
-- [pedersen commitments + inner product argument](/commitments/pedcomm_ipa.py) (WIP)
-- [basic polynomial commitment using modular exponentiation](/commitments/polynomials/basic_polynomial_comm_using_mod.py)
-- [basic polynomial commitment using elliptic curve cryptography](/commitments/polynomials/basic_polynomial_comm_using_ecc.py)
-- [basic trusted setup using modular exponentiation](/commitments/polynomials/basic_trusted_setup_mod.py)
-- [basic trusted setup using elliptic curve cryptography](/commitments/polynomials/basic_trusted_setup_ecc.py)
-- [KZG polynomial commitments](/commitments/kzg.py) (WIP)
+- [Elliptic Curve Diffie-Hellman (ECDH)](/key_exchange/ecdh.py)
+- [Elliptic Curve Digital Signature Algorithm (ECDSA)](/signatures/ecdsa.py)
+- [Edwards-curve Digital Signature Algorithm (EdDSA)](/signatures/eddsa.py) (WIP)
+- [BLS Signature](/signatures/bls_sig.py) (WIP)
+- [Schnorr Signature](/signatures/schnorr_sig.py) (WIP)
+- [Pedersen Commitments using Modular Exponentiation](/commitments/pedcomm_mod.py)
+- [Pedersen Commitments using Elliptic Curve Cryptography](/commitments/pedcomm_ecc.py)
+- [Pedersen Commitments + Inner Product Argument](/commitments/pedcomm_ipa.py) (WIP)
+- [Basic Polynomial Commitment using Modular Exponentiation](/commitments/polynomials/basic_polynomial_comm_using_mod.py)
+- [Basic Polynomial Commitment using Elliptic Curve Cryptography](/commitments/polynomials/basic_polynomial_comm_using_ecc.py)
+- [Basic Trusted Setup using Modular Exponentiation](/commitments/polynomials/basic_trusted_setup_mod.py)
+- [Basic Trusted Setup using Elliptic Curve Cryptography](/commitments/polynomials/basic_trusted_setup_ecc.py)
+- [KZG Polynomial Commitments](/commitments/kzg.py) (WIP)
 
-#### utils
+#### Utils
 
-- [number theory](/utils/number_theory.py)
-- [finite field](/utils/fields.py)
-- [naive elliptic curve](/utils/ecc.py)
-- [bandersnatch curve](/utils/ecc/bandersnatch/curve.py)
-- [bandersnatch field](/utils/ecc/bandersnatch/fields.py)
+- [Number Theory](/utils/number_theory.py)
+- [Finite Field](/utils/fields.py)
+- [Naive Elliptic Curve](/utils/ecc.py)
+- [Bandersnatch Curve](/utils/ecc/bandersnatch/curve.py)
+- [Bandersnatch Field](/utils/ecc/bandersnatch/fields.py)
 
-## usage
+## Usage
 
-this serves as a learning material for me in my journey to becoming a proficient at cryptography. I hope it helps you learn as well.
+This serves as a learning material for me in my journey to becoming a proficient at cryptography. I hope it helps you learn as well.
 
-## disclaimer
+## Disclamer
 
-**this is a learning material and not to be used as in production**.
+You probably know this but DO NOT USE IN PRODUCTION. Cryptography is a delicate pierce of art.
