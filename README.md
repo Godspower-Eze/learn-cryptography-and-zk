@@ -1,8 +1,8 @@
-# Cryptographic Techniques
+# Learn Cryptography
 
 ## Overview
 
-A collection of cryptographic techniques implemented from scratch in python.
+A collection of cryptographic techniques implemented from scratch in Python.
 
 ## Techniques
 
