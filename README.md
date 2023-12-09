@@ -1,4 +1,4 @@
-# Learn Cryptography
+# Learn Cryptography - cryptography from scratch
 
 ## Overview
 
@@ -46,8 +46,8 @@ A collection of cryptographic techniques implemented from scratch in Python.
 
 ## Usage
 
-This serves as a learning material for me in my journey to becoming a proficient at cryptography. I hope it helps you learn as well.
+This serves as a learning material for me in my journey to becoming proficient at cryptography. I hope it helps you learn as well.
 
 ## Disclamer
 
-You probably know this but DO NOT USE IN PRODUCTION. Cryptography is a delicate pierce of art.
+You probably know this but DO NOT USE IN PRODUCTION.
