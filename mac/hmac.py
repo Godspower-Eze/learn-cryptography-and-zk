@@ -8,46 +8,56 @@ HMAC achieves this using hash functions.
 """
 import hashlib
 
-class HMAC_SHA_256:
+class HMAC:
 
     block_size = 64
     opad = bytes.fromhex("5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c")
     ipad = bytes.fromhex("36363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636")
 
-    def __init__(self, secret_key: str, message: str) -> None:
-        self.secret_key = bytes(secret_key, 'utf-8')
+    def __init__(self, hash_algorithm, secret_key: str, message: str) -> None:
+        self.secret_key = bytes.fromhex(secret_key)
         self.derived_key = self.derive_key(self.secret_key)
-        self.message = bytes(message, 'utf-8')
+        self.message = bytes.fromhex(message)
 
     def derive_key(self, key: bytes):
         if len(key) > self.block_size:
             m = hashlib.sha256()
             m.update(key)
             hashed_key = m.digest()
-            return hashed_key.rjust(self.block_size, b'\0')
+            return hashed_key.rjust(self.block_size, b'\x00')
+        elif len(key) < self.block_size:
+            # key.rjust(self.block_size, b'\x00')
+            # key + b'\x00' * (self.block_size-len(key))
+            return key.ljust(self.block_size, b'\x00')
         else:
-            return key.rjust(self.block_size, b'\0')
+            return key
         
     def xor_bytes(self, bytes1: bytes, bytes2: bytes):
         return bytes(x ^ y for x, y in zip(bytes1, bytes2))
     
     def compute(self):
-        s1 = self.xor_bytes(self.derived_key, self.opad)
-        s2 = self.xor_bytes(self.derived_key, self.ipad)
+        s1 = self.xor_bytes(self.derived_key, self.ipad)
+        s1_and_m = s1 + self.message
         h1 = hashlib.sha256()
-        h1.update(s2)
-        h1.update(self.message)
-        hash_s2_m = h1.digest().rjust(self.block_size, b'\0')
+        h1.update(s1_and_m)
+        hash_s1_m = h1.digest()
+        s2 = self.xor_bytes(self.derived_key, self.opad)
+        hash_s1_m_s2 = s2 + hash_s1_m
         h2 = hashlib.sha256()
-        h2.update(s1)
-        h2.update(hash_s2_m)
+        h2.update(hash_s1_m_s2)
         return h2.digest()
 
-
+## Source: https://en.wikipedia.org/wiki/HMAC#Definition
+    
+hash_algorithms = [
+    {"algorithm": hashlib.sha256(),
+     "block_size": 64}
+]
         
+## TEST VECTORS: 
+## Source: https://datatracker.ietf.org/doc/html/rfc4231#section-4
 
 
-hmac = HMAC_SHA_256("key", "The quick brown fox jumps over the lazy dog")
-authentication_tag = hmac.compute()
-print(authentication_tag.hex())
 
+## Test Case 1
+    
