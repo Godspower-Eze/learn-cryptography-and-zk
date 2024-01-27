@@ -4,7 +4,7 @@ HMAC(hash-based MAC) is a type of MAC(message authentication code) that uses has
 A MAC is used for message authentication. It confirms the authenticity of a message and the sender of the message i.e, 
 the message hasn't been modified and the sender hasn't been compromised.
 
-HMAC achieves this using hash functions. 
+HMAC achieves this using hash functions.
 """
 from cryptography.hazmat.primitives import hashes
 
