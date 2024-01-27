@@ -6,7 +6,13 @@ the message hasn't been modified and the sender hasn't been compromised.
 
 HMAC achieves this using hash functions. 
 """
-import hashlib
+from cryptography.hazmat.primitives import hashes
+
+
+def hash_value(H_A, message):
+    H = hashes.Hash(H_A)
+    H.update(message)
+    return H.finalize()
 
 class HMAC:
 
@@ -18,9 +24,7 @@ class HMAC:
 
     def derive_key(self, key: bytes):
         if len(key) > self.block_size:
-            m = self.hash_algorithm
-            m.update(key)
-            hashed_key = m.digest()
+            hashed_key = hash_value(self.hash_algorithm, key)
             return hashed_key.ljust(self.block_size, b'\x00')
         elif len(key) < self.block_size:
             return key.ljust(self.block_size, b'\x00')
@@ -33,23 +37,20 @@ class HMAC:
     def compute(self, secret_key: bytes, message: bytes):
         k0 = self.derive_key(secret_key)
         s1 = self.xor_bytes(k0, self.ipad)
-        s1_and_m = s1 + message
-        h1 = self.hash_algorithm
-        h1.update(s1_and_m)
-        hash_s1_m = h1.digest()
         s2 = self.xor_bytes(k0, self.opad)
+        s1_and_m = s1 + message
+        hash_s1_m = hash_value(self.hash_algorithm, s1_and_m)
         hash_s1_m_s2 = s2 + hash_s1_m
-        h2 = self.hash_algorithm
-        h2.update(hash_s1_m_s2)
-        return h2.digest()
+        final = hash_value(self.hash_algorithm, hash_s1_m_s2)
+        return final
 
 ## Source: https://en.wikipedia.org/wiki/HMAC#Definition
     
 hash_algorithms = [
-    {"algorithm": hashlib.sha224(), "block_size": 64},
-    {"algorithm": hashlib.sha256(), "block_size": 64},
-    {"algorithm": hashlib.sha384(), "block_size": 128},
-    {"algorithm": hashlib.sha512(), "block_size": 128},
+    {"algorithm": hashes.SHA224(), "block_size": 64},
+    {"algorithm": hashes.SHA256(), "block_size": 64},
+    {"algorithm": hashes.SHA384(), "block_size": 128},
+    {"algorithm": hashes.SHA512(), "block_size": 128},
 ]
         
 ## TEST VECTORS: 
@@ -64,6 +65,16 @@ authentication_tags = {
     "hmac_sha_512": ['87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854', '164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737', 'fa73b0089d56a284efb0f0756c890be9b1b5dbdd8ee81a3655f83e33b2279d39bf3e848279a722c806b485a47e67c807b946a337bee8942674278859e13292fb', 'b0ba465637458c6990e5a8c5f61d4af7e576d97ff94b872de76f8050361ee3dba91ca5c11aa25eb4d679275cc5788063a5f19741120c4f2de2adebeb10a298dd', '80b24263c7c1a3ebb71493c1dd7be8b49b46d1f41b4aeec1121b013783f8f3526b56d037e05f2598bd0fd2215d6a1e5295e64f73f63f0aec8b915a985d786598', 'e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58'],
 }
 
-hmac = HMAC(hash_algorithms[1])
-authentication_tag = hmac.compute(bytes.fromhex("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"), bytes.fromhex("4869205468657265"))
-print(authentication_tag.hex())
+## TEST
+
+for key, message, index in zip(keys, messages, range(0, 6)):
+    key = bytes.fromhex(key)
+    message = bytes.fromhex(message)
+    hmac_sha_224 = HMAC(hash_algorithms[0])
+    assert authentication_tags['hmac_sha_224'][index] == hmac_sha_224.compute(key, message).hex()
+    hmac_sha_256 = HMAC(hash_algorithms[1])
+    assert authentication_tags['hmac_sha_256'][index] == hmac_sha_256.compute(key, message).hex()
+    hmac_sha_384 = HMAC(hash_algorithms[2])
+    assert authentication_tags['hmac_sha_384'][index] == hmac_sha_384.compute(key, message).hex()
+    hmac_sha_512 = HMAC(hash_algorithms[3])
+    assert authentication_tags['hmac_sha_512'][index] == hmac_sha_512.compute(key, message).hex()
