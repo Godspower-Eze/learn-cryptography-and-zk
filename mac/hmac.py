@@ -16,6 +16,36 @@ def hash_value(H_A, message):
 
 class HMAC:
 
+    """
+    Steps:
+        1. Pick your hashing algorithm
+
+        2. Get the block_size of the hash algorithm. Check https://en.wikipedia.org/wiki/HMAC#Definition
+
+        3. Set the constants: IPAD(Inner padding) and OPAD(Outer padding). IPAD is `36` repeated `block_size` times and
+           OPAD is `5c` repeated `block_size` times.
+
+        4. Input in your key and your message
+
+        5. Derive a second key k0 from the key k. if the size of k is the same as the `block_size`, then k0 is k. if k is less than
+           the block_size then k0 is k padded with zeros up to the size of `block_size`. Else, if the size of k is more than `block_size`,
+           then k0 is hash(k) padded with zeros up to the size of `block_size`.
+
+        6. compute s1 = k0 xor IPAD
+
+        7. compute s2 = k1 xor OPAD
+
+        8. compute m1 = s1 + message
+
+        9. compute hash1 = hash(m1)
+
+        10. compute m2 = s2 + hash1
+
+        11. compute mac_tag = hash(m2)
+
+        12. `mac_tag` is the authentication tag
+    """
+
     def __init__(self, _hash_algorithms) -> None:
         self.hash_algorithm = _hash_algorithms["algorithm"]
         self.block_size = _hash_algorithms["block_size"]
