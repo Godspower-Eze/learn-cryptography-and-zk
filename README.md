@@ -20,7 +20,6 @@ A collection of cryptographic techniques implemented from scratch in Python.
 ### Modern Cryptography
 
 - [Hash-based Message Authentication Code (HMAC)](./mac/hmac.py)
-- [Simple Hashing](/commitments/simple_hashing.py) (WIP)
 - [Diffie Hallman Key Exchange](/key_exchange/diffie_hellman.py)
 - [RSA](./rsa.py)
 - [Elliptic Curve Diffie-Hellman (ECDH)](/key_exchange/ecdh.py)
