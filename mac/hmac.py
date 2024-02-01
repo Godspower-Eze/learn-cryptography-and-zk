@@ -8,6 +8,8 @@ HMAC achieves this using hash functions.
 """
 from cryptography.hazmat.primitives import hashes
 
+from utils.operations import xor_bytes
+
 
 def hash_value(H_A, message):
     H = hashes.Hash(H_A)
@@ -60,14 +62,11 @@ class HMAC:
             return key.ljust(self.block_size, b'\x00')
         else:
             return key
-        
-    def xor_bytes(self, bytes1: bytes, bytes2: bytes):
-        return bytes(x ^ y for x, y in zip(bytes1, bytes2))
     
     def compute(self, secret_key: bytes, message: bytes):
         k0 = self.derive_key(secret_key)
-        s1 = self.xor_bytes(k0, self.ipad)
-        s2 = self.xor_bytes(k0, self.opad)
+        s1 = xor_bytes(k0, self.ipad)
+        s2 = xor_bytes(k0, self.opad)
         s1_and_m = s1 + message
         hash_s1_m = hash_value(self.hash_algorithm, s1_and_m)
         hash_s1_m_s2 = s2 + hash_s1_m
