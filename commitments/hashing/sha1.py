@@ -4,9 +4,18 @@ A word: 32-bit(4 bytes) string
 A block: 512-bit(64) string
 """
 
+import struct
+
 from utils.operations import and_bytes, or_bytes, xor_bytes, not_bytes
 
+
+BITS_PER_BYTE = 8
+
 class SHA_1:
+
+    rounds = 80
+
+    block_size = 512 # in bits
 
     k1 = bytes.fromhex('5A827999') # (0 <= t <= 19)
 
@@ -15,6 +24,24 @@ class SHA_1:
     k3 = bytes.fromhex('8F1BBCDC') # (40 <= t <= 59)
 
     k4 = bytes.fromhex('CA62C1D6') # (60 <= t <= 79)
+
+    ## Initialization Values
+    
+    h0 = bytes.fromhex('67452301')
+
+    h1 =  bytes.fromhex('EFCDAB89')
+
+    h2 =  bytes.fromhex('98BADCFE')
+
+    h3 = bytes.fromhex('10325476')
+
+    h4 =  bytes.fromhex('C3D2E1F0')
+
+    def pad(self, message: bytes):
+        length = len(message)
+        padding = b"\x80" + b"\x00" * (63 - (length + 8) % 64)
+        padded_message = message + padding + struct.pack(">Q", 8 * length)
+        return padded_message
     
     def f1(self, b: bytes, c: bytes, d:bytes):
         # (0 <= t <= 19)
@@ -31,3 +58,10 @@ class SHA_1:
     def f4z(self, b: bytes, c: bytes, d:bytes):
         # (60 <= t <= 79)
         return xor_bytes(xor_bytes(b, c), d)
+
+
+
+sha = SHA_1()
+message = bytes.fromhex("")
+padded_value = sha.pad(message)
+print(padded_value)
