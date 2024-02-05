@@ -12,6 +12,8 @@ from utils.operations import and_bytes, or_bytes, xor_bytes, not_bytes
 
 BITS_PER_BYTE = 8
 
+MAX_32_BIT_VALUE = 0xFFFFFFFF
+
 class SHA_1:
 
     rounds = 80
@@ -38,6 +40,10 @@ class SHA_1:
 
     h4 =  bytes.fromhex('C3D2E1F0')
 
+    @staticmethod
+    def rotate(n: int, b: int):
+        return ((n << b) | (n >> 32 - b)) & MAX_32_BIT_VALUE
+
     def pad(self, message: bytes) -> bytes:
         length = len(message)
         padding = b"\x80" + b"\x00" * ((self.block_size - 1) - (length + BITS_PER_BYTE) % self.block_size)
@@ -46,6 +52,12 @@ class SHA_1:
     
     def split_into_blocks(self, padded_message: bytes) -> List[bytes]:
         return [padded_message[i : i + self.block_size] for i in range(0, len(padded_message), self.block_size)]
+    
+    def expand_block(self, block: bytes):
+        w = list(struct.unpack(">16L", block)) + [0] * 64
+        for i in range(16, self.rounds):
+            w[i] = self.rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1)
+        return w
     
     def f1(self, b: bytes, c: bytes, d:bytes):
         # (0 <= t <= 19)
@@ -69,4 +81,6 @@ sha = SHA_1()
 message = bytes.fromhex("ffff")
 padded_value = sha.pad(message)
 blocks = sha.split_into_blocks(padded_value)
-print(blocks)
+for block in blocks:
+    w = sha.expand_block(block)
+    print(w)
