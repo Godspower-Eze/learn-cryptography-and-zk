@@ -5,6 +5,7 @@ A block: 512-bit(64) string
 """
 
 import struct
+from typing import List
 
 from utils.operations import and_bytes, or_bytes, xor_bytes, not_bytes
 
@@ -15,7 +16,7 @@ class SHA_1:
 
     rounds = 80
 
-    block_size = 512 # in bits
+    block_size = 64 # in bytes
 
     k1 = bytes.fromhex('5A827999') # (0 <= t <= 19)
 
@@ -37,11 +38,14 @@ class SHA_1:
 
     h4 =  bytes.fromhex('C3D2E1F0')
 
-    def pad(self, message: bytes):
+    def pad(self, message: bytes) -> bytes:
         length = len(message)
-        padding = b"\x80" + b"\x00" * (63 - (length + 8) % 64)
+        padding = b"\x80" + b"\x00" * ((self.block_size - 1) - (length + BITS_PER_BYTE) % self.block_size)
         padded_message = message + padding + struct.pack(">Q", 8 * length)
         return padded_message
+    
+    def split_into_blocks(self, padded_message: bytes) -> List[bytes]:
+        return [padded_message[i : i + self.block_size] for i in range(0, len(padded_message), self.block_size)]
     
     def f1(self, b: bytes, c: bytes, d:bytes):
         # (0 <= t <= 19)
@@ -62,6 +66,7 @@ class SHA_1:
 
 
 sha = SHA_1()
-message = bytes.fromhex("")
+message = bytes.fromhex("ffff")
 padded_value = sha.pad(message)
-print(padded_value)
+blocks = sha.split_into_blocks(padded_value)
+print(blocks)
