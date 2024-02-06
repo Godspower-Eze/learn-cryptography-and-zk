@@ -20,28 +20,44 @@ class SHA_1:
 
     block_size = 64 # in bytes
 
-    k1 = bytes.fromhex('5A827999') # (0 <= t <= 19)
+    k1 = 0x5A827999 # (0 <= t <= 19)
 
-    k2 = bytes.fromhex('6ED9EBA1') # (20 <= t <= 39)
+    k2 = 0x6ED9EBA1 # (20 <= t <= 39)
 
-    k3 = bytes.fromhex('8F1BBCDC') # (40 <= t <= 59)
+    k3 = 0x8F1BBCDC # (40 <= t <= 59)
 
-    k4 = bytes.fromhex('CA62C1D6') # (60 <= t <= 79)
+    k4 = 0xCA62C1D6 # (60 <= t <= 79)
 
-    ## Initialization Values
+    ## Initialization Vector
     
-    h0 = bytes.fromhex('67452301')
+    h0 = 0x67452301
 
-    h1 =  bytes.fromhex('EFCDAB89')
+    h1 =  0xEFCDAB89
 
-    h2 =  bytes.fromhex('98BADCFE')
+    h2 =  0x98BADCFE
 
-    h3 = bytes.fromhex('10325476')
+    h3 = 0x10325476
 
-    h4 =  bytes.fromhex('C3D2E1F0')
+    h4 =  0xC3D2E1F0
+
+    def f1(self, b: int, c: int, d: int) -> int:
+        # (0 <= t <= 19)
+        return (b & c) | ((~b) & d)
+
+    def f2(self, b: int, c: int, d: int) -> int:
+        # (20 <= t <= 39)
+        return b ^ c ^ d
+
+    def f3(self, b: int, c: int, d: int) -> int:
+        # (40 <= t <= 59)
+        return (b & c) | (b & d) | (c & d)
+
+    def f4(self, b: int, c: int, d: int) -> int:
+        # (60 <= t <= 79)
+        return self.f2(b, c, d)
 
     @staticmethod
-    def rotate(n: int, b: int):
+    def rotate(n: int, b: int) -> int:
         return ((n << b) | (n >> 32 - b)) & MAX_32_BIT_VALUE
 
     def pad(self, message: bytes) -> bytes:
@@ -53,34 +69,48 @@ class SHA_1:
     def split_into_blocks(self, padded_message: bytes) -> List[bytes]:
         return [padded_message[i : i + self.block_size] for i in range(0, len(padded_message), self.block_size)]
     
-    def expand_block(self, block: bytes):
+    def expand_block(self, block: bytes) -> List[int]:
         w = list(struct.unpack(">16L", block)) + [0] * 64
         for i in range(16, self.rounds):
             w[i] = self.rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1)
         return w
     
-    def f1(self, b: bytes, c: bytes, d:bytes):
-        # (0 <= t <= 19)
-        return or_bytes(and_bytes(b, c), and_bytes(not_bytes(b), d))
-
-    def f2(self, b: bytes, c: bytes, d:bytes):
-        # (20 <= t <= 39)
-        return xor_bytes(xor_bytes(b, c), d)
-
-    def f3(self, b: bytes, c: bytes, d:bytes):
-        # (40 <= t <= 59)
-        return or_bytes(or_bytes(and_bytes(b, c), and_bytes(b, d)), and_bytes(c, d))
-
-    def f4z(self, b: bytes, c: bytes, d:bytes):
-        # (60 <= t <= 79)
-        return xor_bytes(xor_bytes(b, c), d)
-
+    def digest(self, message: bytes):
+        padded_data = self.pad(message)
+        blocks = self.split_into_blocks(padded_data)
+        for block in blocks:
+            expanded_block = self.expand_block(block)
+            a, b, c, d, e = self.h0, self.h1, self.h2, self.h3, self.h4
+            for i in range(self.rounds):
+                if 0 <= i <= 19:
+                    f = self.f1(b, c, d)
+                    k = self.k1
+                elif 20 <= i <= 39:
+                    f = self.f2(b, c, d)
+                    k = self.k2
+                elif 40 <= i <= 59:
+                    f = self.f3(b, c, d)
+                    k = self.k3
+                elif 60 <= i <= 79:
+                    f = self.f4(b, c, d)
+                    k = self.k4
+                a, b, c, d, e = (
+                    (self.rotate(a, 5) + f + e + k + expanded_block[i]) & MAX_32_BIT_VALUE,
+                    a,
+                    self.rotate(b, 30),
+                    c,
+                    d
+                )
+            self.h0 += a & MAX_32_BIT_VALUE
+            self.h1 += b & MAX_32_BIT_VALUE
+            self.h2 += c & MAX_32_BIT_VALUE
+            self.h3 += d & MAX_32_BIT_VALUE
+            self.h4 += e & MAX_32_BIT_VALUE
+        return ("{:08x}" * 5).format(*(self.h0, self.h1, self.h2, self.h3, self.h4))
+        
 
 
 sha = SHA_1()
-message = bytes.fromhex("ffff")
-padded_value = sha.pad(message)
-blocks = sha.split_into_blocks(padded_value)
-for block in blocks:
-    w = sha.expand_block(block)
-    print(w)
+message = bytes("abc", "utf-8")
+digest = sha.digest(message)
+print(digest)

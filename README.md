@@ -22,6 +22,7 @@ A collection of cryptographic techniques implemented from scratch in Python.
 - [Hash-based Message Authentication Code (HMAC)](./mac/hmac.py)
 - [Diffie Hallman Key Exchange](/key_exchange/diffie_hellman.py)
 - [RSA](./rsa.py)
+- [Secure Hashing Algorithm 1 (SHA-1)](./commitments/hashing/sha1.py)
 - [Elliptic Curve Diffie-Hellman (ECDH)](/key_exchange/ecdh.py)
 - [Elliptic Curve Digital Signature Algorithm (ECDSA)](/signatures/ecdsa.py)
 - [Edwards-curve Digital Signature Algorithm (EdDSA)](/signatures/eddsa.py) (WIP)
