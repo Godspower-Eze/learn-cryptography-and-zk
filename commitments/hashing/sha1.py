@@ -7,8 +7,6 @@ A block: 512-bit(64) string
 import struct
 from typing import List
 
-from utils.operations import and_bytes, or_bytes, xor_bytes, not_bytes
-
 
 BITS_PER_BYTE = 8
 
@@ -70,7 +68,7 @@ class SHA_1:
         return [padded_message[i : i + self.block_size] for i in range(0, len(padded_message), self.block_size)]
     
     def expand_block(self, block: bytes) -> List[int]:
-        w = list(struct.unpack(">16L", block)) + [0] * 64
+        w = list(struct.unpack(">16L", block)) + [0] * self.block_size
         for i in range(16, self.rounds):
             w[i] = self.rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1)
         return w
@@ -101,11 +99,11 @@ class SHA_1:
                     c,
                     d
                 )
-            self.h0 += a & MAX_32_BIT_VALUE
-            self.h1 += b & MAX_32_BIT_VALUE
-            self.h2 += c & MAX_32_BIT_VALUE
-            self.h3 += d & MAX_32_BIT_VALUE
-            self.h4 += e & MAX_32_BIT_VALUE
+            self.h0 = self.h0 + a & MAX_32_BIT_VALUE
+            self.h1 = self.h1 + b & MAX_32_BIT_VALUE
+            self.h2 = self.h2 + c & MAX_32_BIT_VALUE
+            self.h3 = self.h3 + d & MAX_32_BIT_VALUE
+            self.h4 = self.h4 + e & MAX_32_BIT_VALUE
         return ("{:08x}" * 5).format(*(self.h0, self.h1, self.h2, self.h3, self.h4))
         
 
@@ -116,7 +114,7 @@ messages = [
     bytes("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "utf-8"),
     bytes("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu", "utf-8"),
     bytes("a" * 1_000_000, "utf-8"), 
-    # bytes("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno" * 16_777_216, "utf-8")
+    # bytes("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno" * 16_777_216, "utf-8") TOO SLOW
 ]
 digests = [
     "a9993e364706816aba3e25717850c26c9cd0d89d",
@@ -124,17 +122,10 @@ digests = [
     "84983e441c3bd26ebaae4aa1f95129e5e54670f1",
     "a49b2446a02c645bf419f995b67091253a04a259",
     "34aa973cd4c4daa4f61eeb2bdbad27316534016f",
-    # "7789f0c9ef7bfc40d93311143dfbe69e2017f592")
+    # "7789f0c9ef7bfc40d93311143dfbe69e2017f592" TOO SLOW
 ]
 for m, d in zip(messages, digests):
     sha = SHA_1()
     digest = sha.digest(m)
-    # print(digest)
-    # print(d)
-    # assert(digest == d)
+    assert(digest == d)
 
-
-message = bytes("Allan", "utf-8")
-sha = SHA_1()
-digest = sha.digest(message)
-print(digest)
