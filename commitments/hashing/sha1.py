@@ -109,8 +109,32 @@ class SHA_1:
         return ("{:08x}" * 5).format(*(self.h0, self.h1, self.h2, self.h3, self.h4))
         
 
-
 sha = SHA_1()
-message = bytes("abc", "utf-8")
+messages = [
+    bytes("abc", "utf-8"),
+    bytes("", "utf-8"),
+    bytes("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "utf-8"),
+    bytes("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu", "utf-8"),
+    bytes("a" * 1_000_000, "utf-8"), 
+    # bytes("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno" * 16_777_216, "utf-8")
+]
+digests = [
+    "a9993e364706816aba3e25717850c26c9cd0d89d",
+    "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "84983e441c3bd26ebaae4aa1f95129e5e54670f1",
+    "a49b2446a02c645bf419f995b67091253a04a259",
+    "34aa973cd4c4daa4f61eeb2bdbad27316534016f",
+    # "7789f0c9ef7bfc40d93311143dfbe69e2017f592")
+]
+for m, d in zip(messages, digests):
+    sha = SHA_1()
+    digest = sha.digest(m)
+    # print(digest)
+    # print(d)
+    # assert(digest == d)
+
+
+message = bytes("Allan", "utf-8")
+sha = SHA_1()
 digest = sha.digest(message)
 print(digest)
