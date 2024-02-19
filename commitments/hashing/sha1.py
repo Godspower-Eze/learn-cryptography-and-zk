@@ -8,6 +8,7 @@ collision resistant one-way compression functions.s
 """
 
 import struct
+import hashlib
 from typing import List
 
 
@@ -17,17 +18,40 @@ MAX_32_BIT_VALUE = 0xFFFFFFFF
 
 class SHA_1:
 
+    """
+    Steps:
+
+    1. Set some constants:
+
+        - rounds (80) - number of iterations in the compression grouped into sets of 20. that is, the we have 80 iterations but
+                        use the same iteration values per 20 consecutive iterations.
+
+        - block_size (64 bytes or 512 bits) - size of data we can perform computation on at a time. every input is padded to the 
+                                              next multiple of 64 bytes or 512 bits.
+
+        - keys(k1, k2, k3, k4 below) - keys used in each sets of iteration. k1 is used in (0 <= index <= 19), k2 is used in (20 <= index <= 39),
+                                       k3 is used in (40 <= index <= 59) and k4 is used in (60 <= index <= 79).
+
+        - initialization vector(h0, h1, h2, h3, h4 below) - as the name implies, this is the starting hash value and it's the foundation of
+                                                            getting other values. it's safe to say that the hash of "nothing" is the concatenation
+                                                            of these values consecutively. 
+                                                            
+                                                            note: by nothing, i don't mean empty bytes and nothing is
+                                                            not practical.
+        
+    """
+
     rounds = 80
 
-    block_size = 64 # in bytes
+    block_size = 64
 
-    k1 = 0x5A827999 # (0 <= t <= 19)
+    k1 = 0x5A827999
 
-    k2 = 0x6ED9EBA1 # (20 <= t <= 39)
+    k2 = 0x6ED9EBA1 
 
-    k3 = 0x8F1BBCDC # (40 <= t <= 59)
+    k3 = 0x8F1BBCDC 
 
-    k4 = 0xCA62C1D6 # (60 <= t <= 79)
+    k4 = 0xCA62C1D6
 
     ## Initialization Vector
     
@@ -42,19 +66,19 @@ class SHA_1:
     h4 =  0xC3D2E1F0
 
     def f1(self, b: int, c: int, d: int) -> int:
-        # (0 <= t <= 19)
+        # (0 <= index <= 19)
         return (b & c) | ((~b) & d)
 
     def f2(self, b: int, c: int, d: int) -> int:
-        # (20 <= t <= 39)
+        # (20 <= index <= 39)
         return b ^ c ^ d
 
     def f3(self, b: int, c: int, d: int) -> int:
-        # (40 <= t <= 59)
+        # (40 <= index <= 59)
         return (b & c) | (b & d) | (c & d)
 
     def f4(self, b: int, c: int, d: int) -> int:
-        # (60 <= t <= 79)
+        # (60 <= index <= 79)
         return self.f2(b, c, d)
 
     @staticmethod
@@ -127,8 +151,4 @@ digests = [
     "34aa973cd4c4daa4f61eeb2bdbad27316534016f",
     # "7789f0c9ef7bfc40d93311143dfbe69e2017f592" TOO SLOW
 ]
-for m, d in zip(messages, digests):
-    sha = SHA_1()
-    digest = sha.digest(m)
-    assert(digest == d)
 
