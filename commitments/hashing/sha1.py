@@ -1,7 +1,10 @@
 """
-A word: 32-bit(4 bytes) string
+SHA-1(Secure Hashing Algorithm 1) is a type of hash function based on Merkle-Damgard Construction.
 
-A block: 512-bit(64) string
+It takes an arbitrary length input and returns a 160-bit(20 byte) value.
+
+Merkle-Damgard Construction is a method of building collision-resistant cryptographic hash functions from
+collision resistant one-way compression functions.s
 """
 
 import struct
