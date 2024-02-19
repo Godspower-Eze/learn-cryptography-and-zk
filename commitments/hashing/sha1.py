@@ -4,7 +4,9 @@ SHA-1(Secure Hashing Algorithm 1) is a type of hash function based on Merkle-Dam
 It takes an arbitrary length input and returns a 160-bit(20 byte) value.
 
 Merkle-Damgard Construction is a method of building collision-resistant cryptographic hash functions from
-collision resistant one-way compression functions.s
+collision resistant one-way compression functions.
+
+Note: SHA-1 is considered is insecure.
 """
 
 import struct
