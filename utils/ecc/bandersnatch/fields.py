@@ -17,7 +17,7 @@ BYTE_LEN = 32
 
 
 class Fp(Field):
-    
+
     """
     A generic implementation of a finite field over the modulus of the bandersnatch curve
     """
@@ -54,8 +54,8 @@ class Fp(Field):
         for inv in inverses:
             result.append(Fp(None, inv))
         return result
-    
-    ## Method overloads
+
+    # Method overloads
 
     def __add__(self, other):
         return Fp(None, super().__add__(other))
@@ -71,7 +71,7 @@ class Fp(Field):
 
     def __truediv__(self, other):
         return Fp(None, super().__truediv__(other))
-    
+
 
 class Fr(Field):
 
@@ -111,8 +111,8 @@ class Fr(Field):
         for inv in inverses:
             result.append(Fr(None, inv))
         return result
-    
-    ## Method Overloads
+
+    # Method Overloads
 
     def __add__(self, other):
         return Fr(None, super().__add__(other))

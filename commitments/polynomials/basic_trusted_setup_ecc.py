@@ -12,42 +12,56 @@ from utils.number_theory import generate_random_prime
 
 class TrustedSetup_ECC(ECC):
 
-    d = None # degree
-    g = None # generator
-    base_crs: (list[int], list[int]) = None # values of encrypted exponents of x and encrypted exponents of x times a computed by the first party
+    d = None  # degree
+    g = None  # generator
+    # values of encrypted exponents of x and encrypted exponents of x times a
+    # computed by the first party
+    base_crs: (list[int], list[int]) = None
 
     def __init__(self, curve, d: int, x: int, a: int) -> None:
         super().__init__(curve)
         self.d = d
         self.g = curve.g
-        encrypted_values_of_f = [self.scalar_multiplication(x ** i, self.g) for i in range(0, d + 1)]
-        encrypted_values_of_f_times_a = [self.scalar_multiplication((x ** i) * a, self.g) for i in range(0, d + 1)]
+        encrypted_values_of_f = [
+            self.scalar_multiplication(
+                x ** i,
+                self.g) for i in range(
+                0,
+                d + 1)]
+        encrypted_values_of_f_times_a = [
+            self.scalar_multiplication(
+                (x ** i) * a,
+                self.g) for i in range(
+                0,
+                d + 1)]
         self.base_crs = (encrypted_values_of_f, encrypted_values_of_f_times_a)
 
-    def compute_crs(self, x: int, a: int, crs: (list[int], list[int])) -> (list[int], list[int]):
-        assert len(crs[0])  == self.d + 1, "wrong degree"
-        assert len(crs[1])  == self.d + 1, "wrong degree"
+    def compute_crs(self, x: int, a: int, crs: (
+            list[int], list[int])) -> (list[int], list[int]):
+        assert len(crs[0]) == self.d + 1, "wrong degree"
+        assert len(crs[1]) == self.d + 1, "wrong degree"
 
         encrypted_values_of_f = crs[0]
         encrypted_values_of_f_times_a = crs[1]
 
-        crs = ([self.scalar_multiplication(x, i) for i in encrypted_values_of_f], [self.scalar_multiplication(a, i) for i in encrypted_values_of_f_times_a])
+        crs = ([self.scalar_multiplication(x, i) for i in encrypted_values_of_f], [
+               self.scalar_multiplication(a, i) for i in encrypted_values_of_f_times_a])
         return crs
 
 
-#### USAGE
+# USAGE
 
-## Secret of First Participant
+# Secret of First Participant
 x = generate_random_prime(1, 0xffff)
 a = generate_random_prime(1, 0xffff)
 
-## Public
+# Public
 d = 3
 g = 5
 
 EllipticCurve = collections.namedtuple('EllipticCurve', 'name p a b g n h')
 
-## Set the domain parameters specific to the curve
+# Set the domain parameters specific to the curve
 
 curve = EllipticCurve(
     'secp256k1',
@@ -76,5 +90,3 @@ for i in range(0, partipants):
     crs = trusted_setup.compute_crs(x, a, crs)
 
 print("Common Reference String:", crs)
-
-

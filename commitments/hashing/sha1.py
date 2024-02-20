@@ -18,6 +18,7 @@ BITS_PER_BYTE = 8
 
 MAX_32_BIT_VALUE = 0xFFFFFFFF
 
+
 class SHA_1:
 
     """
@@ -28,7 +29,7 @@ class SHA_1:
         - rounds (80) - number of iterations in the compression grouped into sets of 20. that is, the we have 80 iterations but
                         use the same iteration values per 20 consecutive iterations.
 
-        - block_size (64 bytes or 512 bits) - size of data we can perform computation on at a time. every input is padded to the 
+        - block_size (64 bytes or 512 bits) - size of data we can perform computation on at a time. every input is padded to the
                                               next multiple of 64 bytes or 512 bits.
 
         - keys(k1, k2, k3, k4 below) - keys used in each sets of iteration. k1 is used in (0 <= index <= 19), k2 is used in (20 <= index <= 39),
@@ -36,8 +37,8 @@ class SHA_1:
 
         - initialization vector(h0, h1, h2, h3, h4 below) - as the name implies, this is the starting hash value and it's the foundation of
                                                             getting other values. it's safe to say that the hash of "nothing" is the concatenation
-                                                            of these values consecutively. 
-                                                            
+                                                            of these values consecutively.
+
                                                             note: by nothing, i don't mean empty bytes and nothing is
                                                             not practical in a real-world use case.
     2. Get the input as bytes
@@ -69,23 +70,23 @@ class SHA_1:
 
     k1 = 0x5A827999
 
-    k2 = 0x6ED9EBA1 
+    k2 = 0x6ED9EBA1
 
-    k3 = 0x8F1BBCDC 
+    k3 = 0x8F1BBCDC
 
     k4 = 0xCA62C1D6
 
-    ## Initialization Vector
-    
+    # Initialization Vector
+
     h0 = 0x67452301
 
-    h1 =  0xEFCDAB89
+    h1 = 0xEFCDAB89
 
-    h2 =  0x98BADCFE
+    h2 = 0x98BADCFE
 
     h3 = 0x10325476
 
-    h4 =  0xC3D2E1F0
+    h4 = 0xC3D2E1F0
 
     def f1(self, b: int, c: int, d: int) -> int:
         # (0 <= index <= 19)
@@ -109,19 +110,21 @@ class SHA_1:
 
     def pad(self, message: bytes) -> bytes:
         length = len(message)
-        padding = b"\x80" + b"\x00" * ((self.block_size - 1) - (length + BITS_PER_BYTE) % self.block_size)
+        padding = b"\x80" + b"\x00" * \
+            ((self.block_size - 1) - (length + BITS_PER_BYTE) % self.block_size)
         padded_message = message + padding + struct.pack(">Q", 8 * length)
         return padded_message
-    
+
     def split_into_blocks(self, padded_message: bytes) -> List[bytes]:
-        return [padded_message[i : i + self.block_size] for i in range(0, len(padded_message), self.block_size)]
-    
+        return [padded_message[i: i + self.block_size]
+                for i in range(0, len(padded_message), self.block_size)]
+
     def expand_block(self, block: bytes) -> List[int]:
         w = list(struct.unpack(">16L", block)) + [0] * self.block_size
         for i in range(16, self.rounds):
             w[i] = self.rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1)
         return w
-    
+
     def digest(self, message: bytes):
         padded_data = self.pad(message)
         blocks = self.split_into_blocks(padded_data)
@@ -142,7 +145,8 @@ class SHA_1:
                     f = self.f4(b, c, d)
                     k = self.k4
                 a, b, c, d, e = (
-                    (self.rotate(a, 5) + f + e + k + expanded_block[i]) & MAX_32_BIT_VALUE,
+                    (self.rotate(a, 5) + f + e + k +
+                     expanded_block[i]) & MAX_32_BIT_VALUE,
                     a,
                     self.rotate(b, 30),
                     c,
@@ -153,17 +157,21 @@ class SHA_1:
             self.h2 = self.h2 + c & MAX_32_BIT_VALUE
             self.h3 = self.h3 + d & MAX_32_BIT_VALUE
             self.h4 = self.h4 + e & MAX_32_BIT_VALUE
-        return ("{:08x}" * 5).format(*(self.h0, self.h1, self.h2, self.h3, self.h4))
-        
+        return ("{:08x}" * 5).format(* \
+                (self.h0, self.h1, self.h2, self.h3, self.h4))
+
 
 sha = SHA_1()
 messages = [
     bytes("abc", "utf-8"),
     bytes("", "utf-8"),
     bytes("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "utf-8"),
-    bytes("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu", "utf-8"),
-    bytes("a" * 1_000_000, "utf-8"), 
-    # bytes("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno" * 16_777_216, "utf-8") TOO SLOW
+    bytes(
+        "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+        "utf-8"),
+    bytes("a" * 1_000_000, "utf-8"),
+    # bytes("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
+    # * 16_777_216, "utf-8") TOO SLOW
 ]
 digests = [
     "a9993e364706816aba3e25717850c26c9cd0d89d",
@@ -173,4 +181,3 @@ digests = [
     "34aa973cd4c4daa4f61eeb2bdbad27316534016f",
     # "7789f0c9ef7bfc40d93311143dfbe69e2017f592" TOO SLOW
 ]
-

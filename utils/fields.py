@@ -6,7 +6,7 @@ class Field:
     """
     A generic implementation of a finite field
     """
-    
+
     value: int = None
     modulus: int = None
 
@@ -16,13 +16,14 @@ class Field:
 
     def zero(modulus) -> 'Field':
         return Field(0, modulus)
-    
+
     def one(modulus) -> 'Field':
         return Field(1, modulus)
-    
+
     def is_constant(self, constant: int) -> bool:
         # Here we assume that the number has been reduced.
-        # Which should be the case, if values are initialized using the constructors
+        # Which should be the case, if values are initialized using the
+        # constructors
         return self.value == constant
 
     def is_zero(self) -> bool:
@@ -30,12 +31,11 @@ class Field:
 
     def is_one(self) -> bool:
         return self.is_constant(1)
-    
+
     def to_bytes(self, byte_length: int) -> bytes:
         return self.value.to_bytes(byte_length, byteorder='little')
-    
-    def from_bytes(bytes_little_endian: int, modulus: int) -> 'Field':
 
+    def from_bytes(bytes_little_endian: int, modulus: int) -> 'Field':
         """
         Return None if the bytes are not in canonical form.
 
@@ -47,20 +47,20 @@ class Field:
 
         if value >= modulus:
             return None
-        
+
         return Field(value, modulus)
-    
+
     def from_bytes_reduce(bytes_little_endian: int, modulus: int) -> 'Field':
         value = int.from_bytes(
             bytes_little_endian, byteorder='little')
         return Field(value, modulus)
-    
+
     def lexographically_largest(x: 'Field', q_min_one_div_2: int) -> bool:
         return x.value > q_min_one_div_2
 
     def string(self) -> str:
         return str(self.value)
-    
+
     def add(self, a: 'Field', b: 'Field') -> 'Field':
         self._check_all_integers_same_modulus(a, b)
         self.value = (a.value + b.value) % self.modulus
@@ -84,16 +84,16 @@ class Field:
     def equal(self, b: 'Field') -> 'Field':
         self._check_all_integers_same_modulus(b, b)
         return self.value == b.value
-    
+
     def dup(self) -> 'Field':
         return copy.deepcopy(self)
-    
+
     def inv(self, a: 'Field') -> 'Field':
         if a.is_zero():
             return None
         self.value = pow(a.value, -1, self.modulus)
         return self
-    
+
     def multi_inv(values: list['Field']) -> list['Field']:
 
         modulus = values[0].modulus
@@ -110,26 +110,26 @@ class Field:
 
         outputs = [zero] * len(values)
         for i in range(len(values), 0, -1):
-            outputs[i-1] = partials[i-1] * inv if values[i-1] else zero
-            inv = inv * values[i-1] or one
+            outputs[i - 1] = partials[i - 1] * inv if values[i - 1] else zero
+            inv = inv * values[i - 1] or one
 
         return outputs
-    
+
     def sqrt(self, a: 'Field') -> 'Field':
         self._check_all_integers_same_modulus(a, a)
         self.value = modular_sqrt(a.value, self.modulus)
         if self.value is None:
             return None
         return self
-    
+
     def exp(self, a: 'Field', exponent: int) -> 'Field':
         self._check_all_integers_same_modulus(a, a)
         self.value = pow(a.value, exponent, self.modulus)
         return self
-    
+
     def legendre(self) -> int:
         return legendre_symbol(self.value, self.modulus)
-    
+
     def div(self, a: 'Field', b: 'Field') -> 'Field':
         b_inv = b.dup()
         b_inv.inv(b_inv)
@@ -159,20 +159,20 @@ class Field:
         result = Field(0, self.modulus)
         result.neg(self)
         return result
-    
+
     def __truediv__(self, other):
         result = Field(0, self.modulus)
         result.div(self, other)
         return result
 
     def __eq__(self, obj):
-        assert(isinstance(obj, Field))
+        assert (isinstance(obj, Field))
         return self.equal(obj)
-    
+
     # Utils
     def _check_all_integers_same_modulus(self, a: 'Field', b: 'Field'):
-        assert(self.modulus == a.modulus)
-        assert(self.modulus == b.modulus)
+        assert (self.modulus == a.modulus)
+        assert (self.modulus == b.modulus)
 
 
 def modular_sqrt(a: int, p: int):

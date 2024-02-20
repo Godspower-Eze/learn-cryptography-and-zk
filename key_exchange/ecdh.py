@@ -8,11 +8,11 @@ import collections
 
 from utils.ecc import ECC
 
-## USAGE
+# USAGE
 
 EllipticCurve = collections.namedtuple('EllipticCurve', 'name p a b g n h')
 
-## Set the domain parameters specific to the curve
+# Set the domain parameters specific to the curve
 
 curve = EllipticCurve(
     'secp256k1',
@@ -32,17 +32,21 @@ curve = EllipticCurve(
 
 ecdh = ECC(curve)
 
-## Alice Generates key pair and shares public key with bob
+# Alice Generates key pair and shares public key with bob
 alice_private_key, alice_public_key = ecdh.generate_key_pair()
 
-## Bob Generates key pair and shares public key with alice
+# Bob Generates key pair and shares public key with alice
 bob_private_key, bob_public_key = ecdh.generate_key_pair()
 
-## Alice computes the scalar multiplication of her private key and Bob's public key to get a shared secret
-alice_shared_secret = ecdh.scalar_multiplication(alice_private_key, bob_public_key)
+# Alice computes the scalar multiplication of her private key and Bob's
+# public key to get a shared secret
+alice_shared_secret = ecdh.scalar_multiplication(
+    alice_private_key, bob_public_key)
 
-## Bob computes the scalar multiplication of his private key and Alice's public key to get a shared secret
-bob_shared_secret = ecdh.scalar_multiplication(bob_private_key, alice_public_key)
+# Bob computes the scalar multiplication of his private key and Alice's
+# public key to get a shared secret
+bob_shared_secret = ecdh.scalar_multiplication(
+    bob_private_key, alice_public_key)
 
-## The both shared secret should be equal
-assert(alice_shared_secret == bob_shared_secret)
+# The both shared secret should be equal
+assert (alice_shared_secret == bob_shared_secret)

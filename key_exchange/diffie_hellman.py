@@ -1,14 +1,15 @@
 """
 Diffie-hellman key exchange algorithm is cryptographic algorithm based on the discrete logarithm problem.
 
-Given 3 ** e mod n = m. As the value of n gets larger it becomes increasingly hard to get the value of e that resulted in a known m. 
+Given 3 ** e mod n = m. As the value of n gets larger it becomes increasingly hard to get the value of e that resulted in a known m.
 That's the discrete logarithm problem. For sufficiently large prime n, a super computer can't get the value of e.
 
-This is why the Diffie-hellman key exchange is simple and powerful at the same time. 
+This is why the Diffie-hellman key exchange is simple and powerful at the same time.
 
-The goal of Diffie-hellman key exchange is to compute a shared secret between a sender and receiver. 
+The goal of Diffie-hellman key exchange is to compute a shared secret between a sender and receiver.
 The shared secret can later be used to further encryption and decryption of messages between them.
 """
+
 
 class DHKE:
 
@@ -27,12 +28,12 @@ class DHKE:
     """
 
     # Public values
-    g: int # generator
-    n: int # modulus
+    g: int  # generator
+    n: int  # modulus
 
     # Private values
-    a: int # sender private value
-    b: int # receiver private value
+    a: int  # sender private value
+    b: int  # receiver private value
 
     def __init__(self, generator: int, modulus: int) -> None:
         self.g = generator
@@ -40,12 +41,12 @@ class DHKE:
 
     def compute_public_key(self, private_key: int) -> int:
         return (self.g ** private_key) % self.n
-    
+
     def compute_shared_secret(self, private_key: int, public_key: int) -> int:
         return (public_key ** private_key) % self.n
-    
-    
-## USAGE(Note: for the sake of speed, I am using small prime numbers)
+
+
+# USAGE(Note: for the sake of speed, I am using small prime numbers)
 generator = 5
 modulus = 99347
 
@@ -57,7 +58,9 @@ receiver_private_key = 28663
 sender_public_key = dfhe.compute_public_key(sender_private_key)
 receiver_public_key = dfhe.compute_public_key(receiver_private_key)
 
-sender_shared_secret = dfhe.compute_shared_secret(sender_private_key, receiver_public_key)
-receiver_shared_secret = dfhe.compute_shared_secret(receiver_private_key, sender_public_key)
+sender_shared_secret = dfhe.compute_shared_secret(
+    sender_private_key, receiver_public_key)
+receiver_shared_secret = dfhe.compute_shared_secret(
+    receiver_private_key, sender_public_key)
 
-assert(sender_shared_secret == receiver_shared_secret)
+assert (sender_shared_secret == receiver_shared_secret)

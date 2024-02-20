@@ -15,7 +15,7 @@ class TestFields(unittest.TestCase):
         got = field_1 - field_2
 
         expected = Field(6, modulus)
-        
+
         self.assertEqual(got, expected)
 
         field_3 = Field(2, modulus)
@@ -24,7 +24,7 @@ class TestFields(unittest.TestCase):
         got = field_3 - field_4
 
         expected = Field(-11, modulus)
-        
+
         self.assertEqual(got, expected)
 
     def test_add(self):
@@ -37,7 +37,7 @@ class TestFields(unittest.TestCase):
         got = field_1 + field_2
 
         expected = Field(32, modulus)
-        
+
         self.assertEqual(got, expected)
 
     def test_mul(self):
@@ -50,7 +50,7 @@ class TestFields(unittest.TestCase):
         got = field_1 * field_2
 
         expected = Field(1064, modulus)
-        
+
         self.assertEqual(got, expected)
 
     def test_div_inv(self):
@@ -62,11 +62,11 @@ class TestFields(unittest.TestCase):
 
         got = field_1 / field_2
 
-        ## (87 * inverse_of_67) mod 13
+        # (87 * inverse_of_67) mod 13
         expected = Field(0, modulus)
         expected.inv(field_2)
         expected = expected * field_1
-        
+
         self.assertEqual(got, expected)
 
     def test_inv(self):
@@ -124,7 +124,7 @@ class TestFields(unittest.TestCase):
 
 
 def _naive_multi_inv(values: list[Field]):
-    
+
     modulus = values[0].modulus
 
     inv_values = []

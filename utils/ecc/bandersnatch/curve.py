@@ -29,7 +29,7 @@ class BandersnatchAffinePoint():
     x: Fp
     y: Fp
 
-    def __init__(self,  gx: Fp, gy: Fp) -> None:
+    def __init__(self, gx: Fp, gy: Fp) -> None:
         if isinstance(gx, Fp) == False:
             raise Exception(
                 "coordinates must have type basefield, please check the x coordinate")
@@ -52,8 +52,8 @@ class BandersnatchAffinePoint():
         self.y = p.y
         self.x = -p.x
 
-    def add(self, p: 'BandersnatchAffinePoint', q: 'BandersnatchAffinePoint') -> 'BandersnatchAffinePoint':
-
+    def add(self, p: 'BandersnatchAffinePoint',
+            q: 'BandersnatchAffinePoint') -> 'BandersnatchAffinePoint':
         """
         Formula:
 
@@ -94,13 +94,15 @@ class BandersnatchAffinePoint():
 
         return self
 
-    def sub(self, p: 'BandersnatchAffinePoint', q: 'BandersnatchAffinePoint') -> 'BandersnatchAffinePoint':
+    def sub(self, p: 'BandersnatchAffinePoint',
+            q: 'BandersnatchAffinePoint') -> 'BandersnatchAffinePoint':
         neg_q = -q
         self.add(p, neg_q)
         return self
 
-    def double(self, p: 'BandersnatchAffinePoint') -> 'BandersnatchAffinePoint':
-
+    def double(
+            self,
+            p: 'BandersnatchAffinePoint') -> 'BandersnatchAffinePoint':
         """
         Formula:
 
@@ -121,7 +123,7 @@ class BandersnatchAffinePoint():
         y1_exp_2 = y1.exp(2)
 
         x1_exp_2 = x1.exp(2)
-        
+
         a_x1_exp_2 = A * x1_exp_2
 
         x2 = x1y1_2 / (y1_exp_2 + a_x1_exp_2)
@@ -134,7 +136,6 @@ class BandersnatchAffinePoint():
         return self
 
     def is_on_curve(self):
-
         """
         To check if a point is on the curve, we check that the lhs of the equation below is equal to it's rhs:
 
@@ -180,14 +181,13 @@ class BandersnatchAffinePoint():
     def dup(self) -> 'BandersnatchAffinePoint':
         return copy.deepcopy(self)
 
-    def scalar_mul(self, point: 'BandersnatchAffinePoint', scalar: Fr) -> 'BandersnatchAffinePoint':
-
+    def scalar_mul(self, point: 'BandersnatchAffinePoint',
+                   scalar: Fr) -> 'BandersnatchAffinePoint':
         """
         Using Double and Add : https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication#Double-and-add
         """
-        
-        scalar_bits = format(scalar.value, 'b')
 
+        scalar_bits = format(scalar.value, 'b')
 
         result = BandersnatchAffinePoint.identity()
         temp = point.dup()
@@ -295,7 +295,6 @@ class BandersnatchExtendedPoint():
         self.z = p.z
 
     def is_zero(self):
-
         """
         Identity is {x=0, y=1, t = 0, z =1}
         The equivalence class is therefore is {x=0, y=k, t = 0, z=k} for all k where k!=0
@@ -366,7 +365,8 @@ class BandersnatchExtendedPoint():
 
     def scalar_mul(self, point, scalar: Fr):
         # Same as AffinePoint's equivalent method
-        # using double and add : https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication#Double-and-add
+        # using double and add :
+        # https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication#Double-and-add
         scalar_bits = format(scalar.value, 'b')
 
         result = BandersnatchExtendedPoint.identity()

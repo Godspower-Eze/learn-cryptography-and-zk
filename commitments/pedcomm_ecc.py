@@ -20,7 +20,7 @@ class Ped_ECC(ECC):
                 2. Get the generator of the curve `g`
                 3. Pick a random number `s` in [1, q - 1] and compute h = scalar_multiplication(s, g)
                 4. The values q, g and h are sent to the prover
-            
+
             Opening:
                 1. The prover sends the commitment `c`, message `m_i` and the random number `r_i`
                 2. The verifier computes `c_i` = point_addition(scalar_multiplication(m_i, g), scalar_multiplication(r_i, h))
@@ -34,7 +34,7 @@ class Ped_ECC(ECC):
             3. To get the commitment, compute `c` = point_addition(scalar_multiplication(m, g), scalar_multiplication(r, h))
             4. The commitment `c`, the message `m` and the random number `r` is sent to the verifier for opening
     """
-    
+
     def __init__(self, curve) -> None:
         super().__init__(curve)
         g = self.curve.g
@@ -45,23 +45,24 @@ class Ped_ECC(ECC):
         self.g = g
         self.h = h
 
-    def commit(self, m: int, q: int, g: tuple[int, int], h: tuple[int, int]) -> (int, int, int):
+    def commit(self, m: int, q: int,
+               g: tuple[int, int], h: tuple[int, int]) -> (int, int, int):
         r = random.randrange(1, q - 1)
         ag = self.scalar_multiplication(m, g)
         ah = self.scalar_multiplication(r, h)
         c = self.point_addition(ag, ah)
         return (c, m, r)
-    
-    def open(self, m_i: int, c: int, *r_i) -> bool :
+
+    def open(self, m_i: int, c: int, *r_i) -> bool:
         sum = 0
         for i in r_i:
-            sum +=i
+            sum += i
 
         ag_i = self.scalar_multiplication(m_i, g)
         ah_i = self.scalar_multiplication(sum, h)
         c_i = self.point_addition(ag_i, ah_i)
         return c == c_i
-    
+
     def add_comm(self, *c):
         sum = self.point_at_infinity
         for j in c:
@@ -70,12 +71,10 @@ class Ped_ECC(ECC):
         return c_s
 
 
-
-## USAGE
-
+# USAGE
 EllipticCurve = collections.namedtuple('EllipticCurve', 'name p a b g n h')
 
-## Set the domain parameters specific to the curve
+# Set the domain parameters specific to the curve
 
 curve = EllipticCurve(
     'secp256k1',
@@ -94,34 +93,33 @@ curve = EllipticCurve(
 )
 
 
-
-## USAGE
+# USAGE
 
 # SETUP
 
 ped_ecc = Ped_ECC(curve)
 
 q = ped_ecc.q
-g = ped_ecc.g # generator
+g = ped_ecc.g  # generator
 h = ped_ecc.h
 
-## CREATING A COMMITMENT
+# CREATING A COMMITMENT
 
-m = 500 # message
+m = 500  # message
 c, m, r = ped_ecc.commit(m, q, g, h)
 
-## VERIFYING A COMMITMENT
+# VERIFYING A COMMITMENT
 
 status = ped_ecc.open(m, c, r)
-assert(status)
+assert (status)
 
-#### SHOWING THE HOMOMORPHIC PROPERTY OF PEDERSEN COMMITMENT
+# SHOWING THE HOMOMORPHIC PROPERTY OF PEDERSEN COMMITMENT
 
-m1 = 100 # message 1
-m2 = 200 # message 2
-m3 = 200 # message 3
-m4 = 200 # message 4
-m5 = 200 # message 5
+m1 = 100  # message 1
+m2 = 200  # message 2
+m3 = 200  # message 3
+m4 = 200  # message 4
+m5 = 200  # message 5
 
 c1, m_1, r_1 = ped_ecc.commit(m1, q, g, h)
 c2, m_2, r_2 = ped_ecc.commit(m2, q, g, h)
@@ -133,4 +131,4 @@ comms_add = ped_ecc.add_comm(c1, c2, c3, c4, c5)
 m6 = m1 + m2 + m3 + m4 + m5
 
 status = ped_ecc.open(m6, comms_add, r_1, r_2, r_3, r_4, r_5)
-assert(status)
+assert (status)
