@@ -39,8 +39,28 @@ class SHA_1:
                                                             of these values consecutively. 
                                                             
                                                             note: by nothing, i don't mean empty bytes and nothing is
-                                                            not practical.
-        
+                                                            not practical in a real-world use case.
+    2. Get the input as bytes
+
+    3. Pad using the `pad` function
+
+    4. Split into a list of blocks of 64 bytes (block_size) using the `split_into_blocks` function
+
+    5. Iterate through the blocks and do the following on each block:
+
+        a. Expand block using `expand_block`
+
+        b. Initialize a, b, c, d and e with values h0, h1, h2, h3 and h4 respectively
+
+        c. Iterate through 80 (rounds) and do the following:
+
+            i. compute `k` and `f` depend the index as shown from line 127 to 138
+
+            ii. update a, b, c, d and e as shown from line 142 to 147
+
+            iii. finally, update h0, h1, h2, h3 and h4 as shown from line 150 to 154
+
+    6. return the concatenation of the values of h0, h1, h2, h3 and h4 as the hash
     """
 
     rounds = 80
