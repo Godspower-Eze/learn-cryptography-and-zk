@@ -1,6 +1,11 @@
+import struct
+from typing import List
+
+from .constants import MAX_32_BIT_VALUE
+from .sha1 import SHA_1
 
 
-class SHA_256:
+class SHA_256(SHA_1):
 
     h0 = 0x6a09e667
     h1 = 0xbb67ae85
@@ -76,3 +81,61 @@ class SHA_256:
         0xa4506ceb,
         0xbef9a3f7,
         0xc67178f2]
+
+    rounds = 64
+
+    @staticmethod
+    def right_rotate(n: int, b: int) -> int:
+        return ((n >> b) | (n << 32 - b)) & MAX_32_BIT_VALUE
+
+    def expand_block(self, block: bytes) -> List[int]:
+        w = list(struct.unpack(">16L", block)) + [0] * (self.block_size - 16)
+        for i in range(16, self.rounds):
+            s0 = self.right_rotate(
+                w[i-15], 7) ^ self.right_rotate(w[i-15], 18) ^ ((w[i-15] >> 3))
+            s1 = self.right_rotate(
+                w[i-2], 17) ^ self.right_rotate(w[i-2], 19) ^ ((w[i-2] >> 10))
+            w[i] = (w[i-16] + s0 + w[i-7] + s1) & MAX_32_BIT_VALUE
+        return w
+
+    def digest(self, message: bytes):
+        padded_data = self.pad(message)
+        blocks = self.split_into_blocks(padded_data)
+        for block in blocks:
+            w = self.expand_block(block)
+            a, b, c, d, e, f, g, h = self.h0, self.h1, self.h2, self.h3, self.h4, self.h5, self.h6, self.h7
+            for i in range(self.rounds):
+                S1 = self.right_rotate(e, 6) ^ self.right_rotate(
+                    e, 11) ^ self.right_rotate(e, 25)
+                ch = (e & f) ^ ((~e) & g)
+                temp1 = h + S1 + ch + self.k[i] + w[i]
+                S0 = self.right_rotate(a, 2) ^ self.right_rotate(
+                    a, 13) ^ self.right_rotate(a, 22)
+                maj = (a & b) ^ (a & c) ^ (b & c)
+                temp2 = S0 + maj
+
+                h = g
+                g = f
+                f = e
+                e = (d + temp1) & MAX_32_BIT_VALUE
+                d = c
+                c = b
+                b = a
+                a = (temp1 + temp2) & MAX_32_BIT_VALUE
+
+            self.h0 = self.h0 + a & MAX_32_BIT_VALUE
+            self.h1 = self.h1 + b & MAX_32_BIT_VALUE
+            self.h2 = self.h2 + c & MAX_32_BIT_VALUE
+            self.h3 = self.h3 + d & MAX_32_BIT_VALUE
+            self.h4 = self.h4 + e & MAX_32_BIT_VALUE
+            self.h5 = self.h5 + f & MAX_32_BIT_VALUE
+            self.h6 = self.h6 + g & MAX_32_BIT_VALUE
+            self.h7 = self.h7 + h & MAX_32_BIT_VALUE
+        return ("{:08x}" * 8).format(*
+                                     (self.h0, self.h1, self.h2, self.h3, self.h4, self.h5, self.h6, self.h7))
+
+
+sha2 = SHA_256()
+message = b""
+hash_of_message = sha2.digest(message)
+print(hash_of_message)

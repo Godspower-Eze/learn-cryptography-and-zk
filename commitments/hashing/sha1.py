@@ -10,13 +10,9 @@ Note: SHA-1 is considered is insecure.
 """
 
 import struct
-import hashlib
 from typing import List
 
-
-BITS_PER_BYTE = 8
-
-MAX_32_BIT_VALUE = 0xFFFFFFFF
+from .constants import BITS_PER_BYTE, MAX_32_BIT_VALUE
 
 
 class SHA_1:
@@ -105,7 +101,7 @@ class SHA_1:
         return self.f2(b, c, d)
 
     @staticmethod
-    def rotate(n: int, b: int) -> int:
+    def left_rotate(n: int, b: int) -> int:
         return ((n << b) | (n >> 32 - b)) & MAX_32_BIT_VALUE
 
     def pad(self, message: bytes) -> bytes:
@@ -122,7 +118,8 @@ class SHA_1:
     def expand_block(self, block: bytes) -> List[int]:
         w = list(struct.unpack(">16L", block)) + [0] * self.block_size
         for i in range(16, self.rounds):
-            w[i] = self.rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1)
+            w[i] = self.left_rotate(
+                w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1)
         return w
 
     def digest(self, message: bytes):
@@ -145,10 +142,10 @@ class SHA_1:
                     f = self.f4(b, c, d)
                     k = self.k4
                 a, b, c, d, e = (
-                    (self.rotate(a, 5) + f + e + k +
+                    (self.left_rotate(a, 5) + f + e + k +
                      expanded_block[i]) & MAX_32_BIT_VALUE,
                     a,
-                    self.rotate(b, 30),
+                    self.left_rotate(b, 30),
                     c,
                     d
                 )
@@ -157,8 +154,8 @@ class SHA_1:
             self.h2 = self.h2 + c & MAX_32_BIT_VALUE
             self.h3 = self.h3 + d & MAX_32_BIT_VALUE
             self.h4 = self.h4 + e & MAX_32_BIT_VALUE
-        return ("{:08x}" * 5).format(* \
-                (self.h0, self.h1, self.h2, self.h3, self.h4))
+        return ("{:08x}" * 5).format(*
+                                     (self.h0, self.h1, self.h2, self.h3, self.h4))
 
 
 sha = SHA_1()
