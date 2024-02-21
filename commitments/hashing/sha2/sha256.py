@@ -1,8 +1,8 @@
 import struct
 from typing import List
 
-from .constants import MAX_32_BIT_VALUE
-from .sha1 import SHA_1
+from ..constants import MAX_32_BIT_VALUE
+from ..sha1 import SHA_1
 
 
 class SHA_256(SHA_1):
