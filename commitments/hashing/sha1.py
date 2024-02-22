@@ -158,7 +158,6 @@ class SHA_1:
                                      (self.h0, self.h1, self.h2, self.h3, self.h4))
 
 
-sha = SHA_1()
 messages = [
     bytes("abc", "utf-8"),
     bytes("", "utf-8"),
@@ -167,8 +166,6 @@ messages = [
         "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
         "utf-8"),
     bytes("a" * 1_000_000, "utf-8"),
-    # bytes("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
-    # * 16_777_216, "utf-8") TOO SLOW
 ]
 digests = [
     "a9993e364706816aba3e25717850c26c9cd0d89d",
@@ -176,5 +173,8 @@ digests = [
     "84983e441c3bd26ebaae4aa1f95129e5e54670f1",
     "a49b2446a02c645bf419f995b67091253a04a259",
     "34aa973cd4c4daa4f61eeb2bdbad27316534016f",
-    # "7789f0c9ef7bfc40d93311143dfbe69e2017f592" TOO SLOW
 ]
+for m, d in zip(messages, digests):
+    sha = SHA_1()
+    digest = sha.digest(m)
+    assert (digest == d)

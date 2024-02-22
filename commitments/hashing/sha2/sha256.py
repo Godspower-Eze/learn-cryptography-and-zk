@@ -135,7 +135,24 @@ class SHA_256(SHA_1):
                                      (self.h0, self.h1, self.h2, self.h3, self.h4, self.h5, self.h6, self.h7))
 
 
-sha2 = SHA_256()
-message = b""
-hash_of_message = sha2.digest(message)
-print(hash_of_message)
+if __name__ == "__main__":
+    messages = [
+        bytes("abc", "utf-8"),
+        bytes("", "utf-8"),
+        bytes("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "utf-8"),
+        bytes(
+            "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+            "utf-8"),
+        bytes("a" * 1_000_000, "utf-8"),
+    ]
+    digests = [
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
+        "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1",
+        "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0",
+    ]
+    for m, d in zip(messages, digests):
+        sha2_256 = SHA_256()
+        digest = sha2_256.digest(m)
+        assert (digest == d)
