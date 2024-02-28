@@ -43,7 +43,8 @@ class SHA_512(SHA_256):
         return ((n >> b) | (n << 64 - b)) & MAX_64_BIT_VALUE
 
     def cal_padding_length(self, length: int):
-        return ((112 - (length + 1)) % 128) + 8
+        # length + 1 + k congruence 896 mod 1024 adapted to bytes
+        return ((112 - (length + 1)) % 128) + BITS_PER_BYTE
 
     def pad(self, message: bytes) -> bytes:
         length = len(message)
