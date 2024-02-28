@@ -1,3 +1,6 @@
+import binascii
+import struct
+
 from .sha512 import SHA_512
 
 
@@ -14,8 +17,11 @@ class SHA_384(SHA_512):
 
     def digest(self, message: bytes):
         super().digest(message)
-        return ("{:08x}" * 6).format(*
-                                     (self.h0, self.h1, self.h2, self.h3, self.h4, self.h5))
+        h = (self.h0, self.h1, self.h2, self.h3,
+             self.h4, self.h5)
+        return binascii.hexlify(
+            b''.join(struct.pack('!Q', e) for e in h),
+        ).decode('utf-8')
 
 
 if __name__ == "__main__":
