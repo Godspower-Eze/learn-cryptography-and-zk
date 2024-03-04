@@ -65,23 +65,16 @@ class SHA_1:
     block_size = 64
 
     k1 = 0x5A827999
-
     k2 = 0x6ED9EBA1
-
     k3 = 0x8F1BBCDC
-
     k4 = 0xCA62C1D6
 
     # Initialization Vector
 
     h0 = 0x67452301
-
     h1 = 0xEFCDAB89
-
     h2 = 0x98BADCFE
-
     h3 = 0x10325476
-
     h4 = 0xC3D2E1F0
 
     def f1(self, b: int, c: int, d: int) -> int:

@@ -7,6 +7,19 @@ from ..sha1 import SHA_1
 
 class SHA_256(SHA_1):
 
+    """
+    Overview:
+
+    This implementation is similar to the SHA_1 implementation with the following modifications:
+
+    - Uses a different initialization vector and keys(k)
+
+    - The `rounds` are different
+
+    - The `expand_block` function is implemented differently
+    """
+
+    # Initialization Vector
     h0 = 0x6a09e667
     h1 = 0xbb67ae85
     h2 = 0x3c6ef372
