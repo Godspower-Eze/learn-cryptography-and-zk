@@ -1,15 +1,15 @@
 """
 Recall that the security of Diffie-Hellman lies in the fact that given m ** e mod n = c, it's hard to find `e` for
-a sufficiently large `n` and we called this the discrete logarithm problem. Well, elliptic curves gives us another
+a sufficiently large `n` and we called this the discrete logarithm problem. Well, elliptic curves give us another
 form of a discrete logarithm problem.
 
 For an elliptic curve over a finite field in the form y**2 mod p = (x**3 + ax + b) mod p.
 Given a base point (generator) with symbol G: (x, y) on the curve, if the base point is added by itself `z` times and resulting in a new point A = zG.
 
-It turns out that finding `z` when A and G is known is a harder discrete logarithm problem with an even lesser value of `n.`
+It turns out that finding `z` when A and G are known is a harder discrete logarithm problem with an even lesser value of `n.`
 
-Every cryptographic elliptic curve has public parameters (domain parameters) and in this implementation we would be using the secp256k1 curve used in Bitcoin.
-It's domain parameters are listed below:
+Every cryptographic elliptic curve has public parameters (domain parameters) and in this implementation, we would use the secp256k1 curve used in Bitcoin.
+Its domain parameters are listed below:
 
     curve: y**2 = x**3 + 7
     p: 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f
@@ -26,14 +26,14 @@ It's domain parameters are listed below:
     `G` is the base point, generator and the starting point. It is the point on the curve where other points would be generated from.
         Either by addition or scalar multiplication.
 
-    `n` is the order of the generator point `G`. That is, the smallest positive integer such that nG equals to the identity element.
-        The identity element of an elliptic curve is the point at infinity which is a line cuts only two point vertically.
+    `n` is the order of the generator point `G`. That is the smallest positive integer such that nG equals to the identity element.
+        The identity element of an elliptic curve is the point at infinity, a line that cuts only two points vertically.
 
         To verify this, perform a scalar multiplication (see below) of `n` and `G` you should get the point at infinity
 
         Research on `order of an element in a group` to learn more.
 
-    `h` is the ratio of number of the points on the curve and n which is ideally 1.
+    `h` is the ratio of the number of points on the curve and n, ideally 1.
 """
 
 import random
@@ -45,9 +45,9 @@ class ECC:
 
     """
     Steps:
-        1. Choose a elliptic curve. E.g secp256k1, curve25519
-        2. Alice generate key pair and shares the public key with Bob
-        3. Bob generate key pair and shares the public key with Bob
+        1. Choose an elliptic curve. E.g secp256k1, curve25519
+        2. Alice generates key pair and shares the public key with Bob
+        3. Bob generates key pair and shares the public key with Bob
         4. Alice performs a scalar multiplication using her private key and Bob's public key to get a secret key
         4. Bob performs a scalar multiplication using her private key and Alice's public key to the same secret key
     """
@@ -80,7 +80,7 @@ class ECC:
         But, to avoid getting decimal values, we would do this instead:
             s = (((y2 - y1) mod p)) * (((x2 - x1) ** -1) mod p) mod p
 
-            We basically converted the divisor to it's multiplicative inverse mod p
+            We converted the divisor to its multiplicative inverse mod p
             multiplied it by the dividend mod p
         """
 
