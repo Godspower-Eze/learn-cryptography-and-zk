@@ -1,3 +1,5 @@
 py/venv
 **/**/__pycache__
 /.vscode
+with_rust/*/target
+with_rust/target
