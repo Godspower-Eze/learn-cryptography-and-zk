@@ -4,6 +4,10 @@ from bitarray import bitarray
 def pad(message: bytes) -> bitarray:
     a = bitarray()
     a.frombytes(message)
+    a.bytereverse()
+    a.extend([0, 1])
+    a.append(1)
+    print(len(a))
     return a
 
 
