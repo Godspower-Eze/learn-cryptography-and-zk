@@ -1,11 +1,16 @@
 from bitarray import bitarray
 
 
-def pad(message: bytes) -> bitarray:
+def pad(message: bytes, rate: int) -> bitarray:
     """
     According to the spec(FIPS PUB 202), section 5.1,
         j = (- m - 2) mod x
         padding = 1 concat 0 ^ j concat 1
+
+        where:
+            - `m` is the length of the message (after the delimiter has been added)
+
+            - `x` is the rate
 
     Full padding steps:
 
@@ -26,7 +31,7 @@ def pad(message: bytes) -> bitarray:
     a.extend([0, 1])
 
     length = len(a)
-    j = (-(length) - 2) % 16
+    j = (-(length) - 2) % rate
     a.append(1)
     zeros = [0 for _ in range(0, j)]
     a.extend(zeros)
@@ -43,5 +48,5 @@ def three_d_to_one_d():
 
 
 message = bytes.fromhex("aebcdf")
-padded_message = pad(message)
+padded_message = pad(message, 1088)
 print(len(padded_message))
