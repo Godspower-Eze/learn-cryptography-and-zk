@@ -2,4 +2,5 @@
 members = [
     "ff",
     "poly"
-]
+, "stark"]
+resolver = "2"
