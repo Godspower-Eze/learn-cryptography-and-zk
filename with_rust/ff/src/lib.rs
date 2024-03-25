@@ -1,13 +1,18 @@
 use std::ops::{Add, Mul, Rem, Sub};
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct FFE {
+#[derive(Debug, PartialEq)]
+pub struct FF {
     // modulus
     n: usize,
-    // element
-    value: usize,
     // generator
     g: usize,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct FFE<'a> {
+    ff: &'a FF,
+    // element
+    value: usize,
 }
 
 struct ISize {
@@ -34,43 +39,41 @@ impl Rem<usize> for ISize {
     }
 }
 
-impl Add for FFE {
+impl Add for FFE<'_> {
     type Output = Result<Self, Error>;
 
     fn add(self, rhs: Self) -> Self::Output {
-        if self.n != rhs.n {
+        if self.ff != rhs.ff {
             return Err(Error::DifferentModulus);
         } else {
             Ok(Self {
-                value: (self.value + rhs.value) % self.n,
-                n: self.n,
-                g: self.g,
+                value: (self.value + rhs.value) % rhs.ff.n,
+                ..self
             })
         }
     }
 }
 
-impl Mul for FFE {
+impl Mul for FFE<'_> {
     type Output = Result<Self, Error>;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        if self.n != rhs.n {
+        if self.ff != rhs.ff {
             return Err(Error::DifferentModulus);
         } else {
             Ok(Self {
-                value: (self.value * rhs.value) % self.n,
-                n: self.n,
-                g: self.g,
+                value: (self.value * rhs.value) % rhs.ff.n,
+                ..self
             })
         }
     }
 }
 
-impl Sub for FFE {
+impl Sub for FFE<'_> {
     type Output = Result<Self, Error>;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        if self.n != rhs.n {
+        if self.ff != rhs.ff {
             return Err(Error::DifferentModulus);
         } else {
             // TODO: investigate safety of conversion
@@ -78,223 +81,224 @@ impl Sub for FFE {
             Ok(Self {
                 value: ISize {
                     value: sub as isize,
-                } % self.n,
-                n: self.n,
-                g: self.g,
+                } % rhs.ff.n,
+                ..self
             })
         }
     }
 }
 
-impl FFE {
-    pub fn new(value: isize, g: usize, n: usize) -> Result<Self, Error> {
+impl FF {
+    pub fn init(g: usize, n: usize) -> Result<Self, Error> {
         if n == 0 || n == 1 {
             return Err(Error::InvalidModulus);
+        } else {
+            Ok(Self { n, g })
         }
-        Ok(Self {
-            value: ISize { value } % n,
-            n,
-            g,
+    }
+
+    pub fn zero(&self) -> FFE {
+        FFE { ff: self, value: 0 }
+    }
+
+    pub fn one(&self) -> FFE {
+        FFE { ff: self, value: 1 }
+    }
+
+    pub fn new(&self, value: isize) -> Result<FFE, Error> {
+        if self.n == 0 || self.n == 1 {
+            return Err(Error::InvalidModulus);
+        }
+        Ok(FFE {
+            ff: self,
+            value: ISize { value } % self.n,
         })
-    }
-
-    pub fn zero(&self) -> Self {
-        FFE {
-            n: self.n,
-            g: self.g,
-            value: 0,
-        }
-    }
-
-    pub fn one(&self) -> Self {
-        FFE {
-            n: self.n,
-            g: self.g,
-            value: 1,
-        }
-    }
-
-    pub fn get_element(&self) -> usize {
-        self.n
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::FFE;
+    use crate::*;
+
+    const FIELD_MODULUS: usize = 3221225473;
+
+    const GENERATOR: usize = 5;
+
+    const FINITE_FIELD: FF = FF {
+        g: GENERATOR,
+        n: FIELD_MODULUS,
+    };
+
+    #[test]
+    fn init() {
+        assert_eq!(
+            FF::init(GENERATOR, FIELD_MODULUS).unwrap(),
+            FF {
+                g: GENERATOR,
+                n: FIELD_MODULUS
+            }
+        );
+    }
 
     #[test]
     fn new() {
         assert_eq!(
-            FFE::new(4, 1, 5).unwrap(),
+            FINITE_FIELD.new(90).unwrap(),
             FFE {
-                value: 4,
-                n: 5,
-                g: 1
-            }
+                value: 90,
+                ff: &FINITE_FIELD
+            },
         );
         assert_eq!(
-            FFE::new(8, 1, 5).unwrap(),
+            FINITE_FIELD.new(3).unwrap(),
             FFE {
                 value: 3,
-                n: 5,
-                g: 1
+                ff: &FINITE_FIELD
             }
         );
         assert_eq!(
-            FFE::new(77, 1, 5).unwrap(),
+            FINITE_FIELD.new(3221225482).unwrap(),
             FFE {
-                value: 2,
-                n: 5,
-                g: 1
+                value: 9,
+                ff: &FINITE_FIELD
             }
         );
         // negative value
         assert_eq!(
-            FFE::new(-6, 1, 5).unwrap(),
+            FINITE_FIELD.new(-6).unwrap(),
             FFE {
-                value: 4,
-                n: 5,
-                g: 1
+                value: 3221225467,
+                ff: &FINITE_FIELD
             }
         );
         assert_eq!(
-            FFE::new(-20, 1, 5).unwrap(),
+            FINITE_FIELD.new(-20).unwrap(),
             FFE {
-                value: 0,
-                n: 5,
-                g: 1
+                value: 3221225453,
+                ff: &FINITE_FIELD
             }
         );
         assert_eq!(
-            FFE::new(-89, 1, 5).unwrap(),
+            FINITE_FIELD.new(-89).unwrap(),
             FFE {
-                value: 1,
-                n: 5,
-                g: 1
+                value: 3221225384,
+                ff: &FINITE_FIELD
             }
         );
     }
 
     #[test]
     fn zero() {
-        let ff_1 = FFE::new(10, 1, 5).unwrap();
         assert_eq!(
-            ff_1.zero(),
+            FINITE_FIELD.zero(),
             FFE {
                 value: 0,
-                n: 5,
-                g: 1
+                ff: &FINITE_FIELD
             }
         );
     }
 
     #[test]
     fn one() {
-        let ff_1 = FFE::new(10, 1, 5).unwrap();
         assert_eq!(
-            ff_1.one(),
+            FINITE_FIELD.one(),
             FFE {
                 value: 1,
-                n: 5,
-                g: 1
+                ff: &FINITE_FIELD
             }
         );
     }
 
     #[test]
     fn add() {
-        let ff_1 = FFE::new(19, 1, 5).unwrap();
-        let ff_2 = FFE::new(10, 1, 5).unwrap();
-        let new_ff = ff_1 + ff_2;
+        let ffe_1 = FINITE_FIELD.new(322122547).unwrap();
+        let ffe_2 = FINITE_FIELD.new(8902).unwrap();
+        let new_ff = ffe_1 + ffe_2;
         assert_eq!(
             new_ff.unwrap(),
             FFE {
-                value: 4,
-                n: 5,
-                g: 1
+                value: 322131449,
+                ff: &FINITE_FIELD
             }
         );
 
-        let ff_3 = FFE::new(67, 1, 7).unwrap();
-        let ff_4 = FFE::new(60, 1, 7).unwrap();
-        let new_ff = ff_3 + ff_4;
+        let ffe_3 = FINITE_FIELD.new(-67).unwrap();
+        let ffe_4 = FINITE_FIELD.new(60).unwrap();
+        let new_ff = ffe_3 + ffe_4;
         assert_eq!(
             new_ff.unwrap(),
             FFE {
-                value: 1,
-                n: 7,
-                g: 1
+                value: 3221225466,
+                ff: &FINITE_FIELD
             }
         );
 
-        let ff_5 = FFE::new(67, 1, 7).unwrap();
-        let ff_6 = FFE::new(60, 1, 13).unwrap();
-        let new_ff = ff_5 + ff_6;
+        let ffe_5 = FINITE_FIELD.new(67).unwrap();
+        let ff = FF::init(1, 5).unwrap();
+        let ffe_6 = ff.new(60).unwrap();
+        let new_ff = ffe_5 + ffe_6;
         assert!(new_ff.is_err());
     }
 
     #[test]
     fn mul() {
-        let ff_1 = FFE::new(19, 1, 5).unwrap();
-        let ff_2 = FFE::new(11, 1, 5).unwrap();
-        let new_ff = ff_1 * ff_2;
+        let ffe_1 = FINITE_FIELD.new(1912323).unwrap();
+        let ffe_2 = FINITE_FIELD.new(111091).unwrap();
+        let new_ff = ffe_1 * ffe_2;
         assert_eq!(
             new_ff.unwrap(),
             FFE {
-                value: 4,
-                n: 5,
-                g: 1
+                value: 3062218648,
+                ff: &FINITE_FIELD
             }
         );
 
-        let ff_3 = FFE::new(67, 1, 7).unwrap();
-        let ff_4 = FFE::new(4, 1, 7).unwrap();
-        let new_ff = ff_3 * ff_4;
+        let ffe_3 = FINITE_FIELD.new(67).unwrap();
+        let ffe_4 = FINITE_FIELD.new(4).unwrap();
+        let new_ff = ffe_3 * ffe_4;
         assert_eq!(
             new_ff.unwrap(),
             FFE {
-                value: 2,
-                n: 7,
-                g: 1
+                value: 268,
+                ff: &FINITE_FIELD
             }
         );
 
-        let ff_5 = FFE::new(67, 1, 7).unwrap();
-        let ff_6 = FFE::new(60, 1, 13).unwrap();
-        let new_ff = ff_5 * ff_6;
+        let ffe_5 = FINITE_FIELD.new(67).unwrap();
+        let ff = FF::init(1, 5).unwrap();
+        let ffe_6 = ff.new(60).unwrap();
+        let new_ff = ffe_5 * ffe_6;
         assert!(new_ff.is_err());
     }
 
     #[test]
     fn sub() {
-        let ff_1 = FFE::new(19, 1, 5).unwrap();
-        let ff_2 = FFE::new(7, 1, 5).unwrap();
-        let new_ff = ff_1 - ff_2;
+        let ffe_1 = FINITE_FIELD.new(892).unwrap();
+        let ffe_2 = FINITE_FIELD.new(7).unwrap();
+        let new_ff = ffe_1 - ffe_2;
         assert_eq!(
             new_ff.unwrap(),
             FFE {
-                value: 2,
-                n: 5,
-                g: 1
+                value: 885,
+                ff: &FINITE_FIELD
             }
         );
 
-        let ff_3 = FFE::new(2, 1, 7).unwrap();
-        let ff_4 = FFE::new(11, 1, 7).unwrap();
-        let new_ff = ff_3 - ff_4;
+        let ffe_3 = FINITE_FIELD.new(2).unwrap();
+        let ffe_4 = FINITE_FIELD.new(11).unwrap();
+        let new_ff = ffe_3 - ffe_4;
         assert_eq!(
             new_ff.unwrap(),
             FFE {
-                value: 5,
-                n: 7,
-                g: 1
+                value: 3221225464,
+                ff: &FINITE_FIELD
             }
         );
 
-        let ff_5 = FFE::new(67, 1, 7).unwrap();
-        let ff_6 = FFE::new(60, 1, 13).unwrap();
-        let new_ff = ff_5 - ff_6;
+        let ffe_5 = FINITE_FIELD.new(67).unwrap();
+        let ff = FF::init(1, 5).unwrap();
+        let ffe_6 = ff.new(60).unwrap();
+        let new_ff = ffe_5 - ffe_6;
         assert!(new_ff.is_err());
     }
 }

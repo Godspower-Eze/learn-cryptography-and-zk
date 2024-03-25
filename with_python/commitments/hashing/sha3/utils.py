@@ -1,6 +1,10 @@
 from bitarray import bitarray
 import numpy as np
 
+X_AXIS = 5
+Y_AXIS = 5
+Z_AXIS = 64
+
 
 def pad(message: bytes, rate: int) -> bitarray:
     """
@@ -47,11 +51,11 @@ def one_d_to_three_d(bits: bitarray) -> np.ndarray:
     """
     implemented according to the spec(FIPS PUB 202), section 3.1.2
     """
-    out = np.zeros((5, 5, 64), dtype=int)
-    for i in range(5):
-        for j in range(5):
-            for k in range(64):
-                out[i][j][k] = bits[64*(5*j + i) + k]
+    out = np.zeros((X_AXIS, Y_AXIS, Z_AXIS), dtype=int)
+    for x in range(X_AXIS):
+        for y in range(Y_AXIS):
+            for z in range(Z_AXIS):
+                out[x][y][z] = bits[Z_AXIS*(5*y + x) + z]
     return out
 
 
@@ -60,14 +64,38 @@ def three_d_to_one_d(bits_box: np.ndarray) -> bitarray:
     implemented according to the spec(FIPS PUB 202), section 3.1.3
     """
     out = np.zeros(1600, dtype=int)  # Initialize empty array of size 1600
-    for i in range(5):
-        for j in range(5):
-            for k in range(64):
-                out[64*(5*j+i)+k] = bits_box[i][j][k]
+    for x in range(X_AXIS):
+        for y in range(Y_AXIS):
+            for z in range(Z_AXIS):
+                out[Z_AXIS*(5*y+x)+z] = bits_box[x][y][z]
     return bitarray(out.tolist())
+
+
+def theta(bits_box: np.ndarray):
+    """
+    implemented according to the spec(FIPS PUB 202), section 3.2.1
+    """
+
+    def c_of_x_and_y(x):
+        # C[x,z] = A[x, 0 , z] ⊕ A[x, 1, z] ⊕ A[x, 2, z] ⊕ A[x, 3, z] ⊕ A[x, 4, z].
+        a = bits_box[x, 0, z] ^ bits_box[x, 1,
+                                         z] ^ bits_box[x, 2, z] ^ bits_box[x, 3, z] ^ bits_box[x, 4, z]
+        return a
+
+    out = np.zeros((5, 5, 64), dtype=int)
+    for x in range(X_AXIS):
+        for y in range(Y_AXIS):
+            for z in range(Z_AXIS):
+                # D[x,z] = C[(x - 1) mod 5, z] ⊕ C[(x+1) mod 5, (z – 1) mod w]
+                d = c_of_x_and_y((x - 1) % 5) ^ c_of_x_and_y((x + 1) % 5)
+                # A′[x, y, z] = A[x, y, z] ⊕ D[x, z].
+                out[x, y, z] = bits_box[x, y, z] ^ d
+    return out
 
 
 message = bytes.fromhex("aebcdf")
 padded_message = pad(message, 1600)
 d = one_d_to_three_d(padded_message)
 e = three_d_to_one_d(d)
+after_theta = theta(d)
+print(after_theta)
