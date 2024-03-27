@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul, Rem, Sub};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct FF {
     // modulus
     n: usize,
@@ -8,7 +8,7 @@ pub struct FF {
     g: usize,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct FFE<'a> {
     ff: &'a FF,
     // element
@@ -22,6 +22,7 @@ struct ISize {
 #[derive(Debug)]
 pub enum Error {
     InvalidModulus,
+    InvalidPower,
     DifferentModulus,
 }
 
@@ -114,6 +115,34 @@ impl FF {
             value: ISize { value } % self.n,
         })
     }
+
+    pub fn generator(&self) -> FFE {
+        FFE {
+            ff: self,
+            value: self.g,
+        }
+    }
+}
+
+impl FFE<'_> {
+    pub fn pow(&self, mut n: usize) -> Result<Self, Error> {
+        if n == 0 {
+            Err(Error::InvalidPower)
+        } else {
+            let mut current_power = Self { ..*self };
+            let mut result = self.ff.one();
+            while n > 0 {
+                if n % 2 == 1 {
+                    result = (result * current_power)?;
+                }
+                n = n / 2;
+                current_power = (current_power * current_power)?;
+            }
+            Ok(result)
+        }
+    }
+
+    pub fn is_order(&self, order: usize) {}
 }
 
 #[cfg(test)]
