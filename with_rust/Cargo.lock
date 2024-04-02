@@ -9,6 +9,9 @@ version = "0.1.0"
 [[package]]
 name = "poly"
 version = "0.1.0"
+dependencies = [
+ "ff",
+]
 
 [[package]]
 name = "stark101"

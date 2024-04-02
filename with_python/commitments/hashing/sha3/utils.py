@@ -1,6 +1,8 @@
 from bitarray import bitarray
 import numpy as np
 
+from ..constants import W
+
 X_AXIS = 5
 Y_AXIS = 5
 Z_AXIS = 64
@@ -55,7 +57,8 @@ def one_d_to_three_d(bits: bitarray) -> np.ndarray:
     for x in range(X_AXIS):
         for y in range(Y_AXIS):
             for z in range(Z_AXIS):
-                out[x][y][z] = bits[Z_AXIS*(5*y + x) + z]
+                out[x][y][z] = bits[W*(5*y + x) + z]
+                print([x, y, z])
     return out
 
 
@@ -76,7 +79,7 @@ def theta(bits_box: np.ndarray):
     implemented according to the spec(FIPS PUB 202), section 3.2.1
     """
 
-    def c_of_x_and_y(x):
+    def c_of_x_and_y(bits_box, x, z):
         # C[x,z] = A[x, 0 , z] ⊕ A[x, 1, z] ⊕ A[x, 2, z] ⊕ A[x, 3, z] ⊕ A[x, 4, z].
         a = bits_box[x, 0, z] ^ bits_box[x, 1,
                                          z] ^ bits_box[x, 2, z] ^ bits_box[x, 3, z] ^ bits_box[x, 4, z]
@@ -87,7 +90,8 @@ def theta(bits_box: np.ndarray):
         for y in range(Y_AXIS):
             for z in range(Z_AXIS):
                 # D[x,z] = C[(x - 1) mod 5, z] ⊕ C[(x+1) mod 5, (z – 1) mod w]
-                d = c_of_x_and_y((x - 1) % 5) ^ c_of_x_and_y((x + 1) % 5)
+                d = c_of_x_and_y((x - 1) %
+                                 5, z) ^ c_of_x_and_y((x + 1) % 5, (z - 1) % W)
                 # A′[x, y, z] = A[x, y, z] ⊕ D[x, z].
                 out[x, y, z] = bits_box[x, y, z] ^ d
     return out

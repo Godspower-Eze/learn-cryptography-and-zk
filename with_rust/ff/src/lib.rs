@@ -126,23 +126,40 @@ impl FF {
 
 impl FFE<'_> {
     pub fn pow(&self, mut n: usize) -> Result<Self, Error> {
-        if n == 0 {
-            Err(Error::InvalidPower)
-        } else {
-            let mut current_power = Self { ..*self };
-            let mut result = self.ff.one();
-            while n > 0 {
-                if n % 2 == 1 {
-                    result = (result * current_power)?;
-                }
-                n = n / 2;
-                current_power = (current_power * current_power)?;
+        let mut current_power = Self { ..*self };
+        let mut result = self.ff.one();
+        while n > 0 {
+            if n % 2 == 1 {
+                result = (result * current_power)?;
             }
-            Ok(result)
+            n = n / 2;
+            current_power = (current_power * current_power)?;
         }
+        Ok(result)
     }
 
-    pub fn is_order(&self, order: usize) {}
+    pub fn is_order(&self, order: usize) -> bool {
+        let identity = self.ff.one();
+        let exp = self.pow(order).unwrap();
+        let res = if identity == exp {
+            let mut res = true;
+            for i in 1..order {
+                let exp_inner = self.pow(i).unwrap();
+                if exp_inner == identity {
+                    res = false;
+                    break;
+                }
+            }
+            res
+        } else {
+            false
+        };
+        return res;
+    }
+
+    pub fn ff(&self) -> FF {
+        *self.ff
+    }
 }
 
 #[cfg(test)]
