@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, Rem, Sub};
+use std::ops::{Add, AddAssign, Mul, Rem, Sub};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct FF {
@@ -52,6 +52,13 @@ impl Add for FFE<'_> {
                 ..self
             })
         }
+    }
+}
+
+impl AddAssign for FFE<'_> {
+    fn add_assign(&mut self, rhs: Self) {
+        let addition = (*self + rhs).unwrap();
+        *self = addition;
     }
 }
 

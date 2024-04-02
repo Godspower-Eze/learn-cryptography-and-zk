@@ -1,4 +1,5 @@
 use ff::FF;
+use poly::UniPoly;
 
 const FIELD_MODULUS: usize = 3221225473;
 
@@ -43,4 +44,9 @@ fn main() {
     } else {
         print!("g is order > 1024")
     }
+
+    let x = UniPoly::x(&ff);
+    println!("{:?}", x);
+
+    let p = 2 * x.pow(2) + 1;
 }

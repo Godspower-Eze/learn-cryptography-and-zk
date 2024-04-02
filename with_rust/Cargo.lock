@@ -18,4 +18,5 @@ name = "stark101"
 version = "0.1.0"
 dependencies = [
  "ff",
+ "poly",
 ]
