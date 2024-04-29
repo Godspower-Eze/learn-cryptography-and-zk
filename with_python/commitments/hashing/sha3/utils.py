@@ -1,14 +1,14 @@
+import sys
+
 from bitarray import bitarray
 import numpy as np
 
-from ..constants import W
+from ..constants import X, Y, W, STATE_SIZE
 
-X_AXIS = 5
-Y_AXIS = 5
-Z_AXIS = 64
+np.set_printoptions(threshold=sys.maxsize)
 
 
-def pad(message: bytes, rate: int) -> bitarray:
+def bit_padding(message: bytes, rate: int) -> bitarray:
     """
     According to the spec(FIPS PUB 202), section 5.1,
         j = (- m - 2) mod x
@@ -49,16 +49,66 @@ def pad(message: bytes, rate: int) -> bitarray:
     return a
 
 
-def one_d_to_three_d(bits: bitarray) -> np.ndarray:
+def byte_padding(message: bytes, rate: int) -> bytes:
     """
-    implemented according to the spec(FIPS PUB 202), section 3.1.2
+    According to the spec(FIPS PUB 202), section B.2,
+
+        q = (x - 8) - (m % (x / 8))
+
+        where:
+            x is the rate
+
+            m is the message length
+
+        if q is 1, append `0x86` to the message
+
+        if q is 2, append `0x0686` to the message
+
+        if q is more than 2, 0x06, 0x00 * (q - 2) and 0x86 in this order.
     """
-    out = np.zeros((X_AXIS, Y_AXIS, Z_AXIS), dtype=int)
-    for x in range(X_AXIS):
-        for y in range(Y_AXIS):
-            for z in range(Z_AXIS):
-                out[x][y][z] = bits[W*(5*y + x) + z]
-                print([x, y, z])
+    length = len(message)
+    rate_in_byte = (rate // 8)
+    q = rate_in_byte - (length % rate_in_byte)
+    if q == 1:
+        return message + bytes.fromhex("86")
+    elif q == 2:
+        return message + bytes.fromhex("0680")
+    else:
+        x = q - 2
+        zeros_bytes = bytes.fromhex("00") * x
+        return message + bytes.fromhex("06") + zeros_bytes + bytes.fromhex("80")
+
+
+def one_d_to_two_d(padded_message: bytes, rate: int) -> np.ndarray:
+    out = np.zeros((X, Y), dtype=np.uint64)
+    for i in range(0, len(padded_message), rate // 8):
+        for j in range(0, rate // W):
+            pre_index = i + j * 8
+
+            first = pre_index + 0
+            second = pre_index + 1
+            third = pre_index + 2
+            fourth = pre_index + 3
+            fifth = pre_index + 4
+            sixth = pre_index + 5
+            seventh = pre_index + 6
+            eighth = pre_index + 7
+
+            first_byte = padded_message[first] << 0
+            second_byte = padded_message[second] << 8
+            third_byte = padded_message[third] << 16
+            fourth_byte = padded_message[fourth] << 24
+            fifth_byte = padded_message[fifth] << 32
+            sixth_byte = padded_message[sixth] << 40
+            seventh_byte = padded_message[seventh] << 48
+            eighth_byte = padded_message[eighth] << 56
+
+            combination = first_byte + second_byte + \
+                third_byte + fourth_byte + fifth_byte + sixth_byte + seventh_byte + eighth_byte
+
+            x = j % 5
+            y = j // 5
+            out[x][y] = int(out[x][y]) ^ combination
     return out
 
 
@@ -66,11 +116,11 @@ def three_d_to_one_d(bits_box: np.ndarray) -> bitarray:
     """
     implemented according to the spec(FIPS PUB 202), section 3.1.3
     """
-    out = np.zeros(1600, dtype=int)  # Initialize empty array of size 1600
-    for x in range(X_AXIS):
-        for y in range(Y_AXIS):
-            for z in range(Z_AXIS):
-                out[Z_AXIS*(5*y+x)+z] = bits_box[x][y][z]
+    out = [[], [], [], [], []]  # Initialize empty array of size 1600
+    for x in range(X):
+        for y in range(Y):
+            for z in range(W):
+                out[W*(5*y+x)+z] = bits_box[x][y][z]
     return bitarray(out.tolist())
 
 
@@ -86,9 +136,9 @@ def theta(bits_box: np.ndarray):
         return a
 
     out = np.zeros((5, 5, 64), dtype=int)
-    for x in range(X_AXIS):
-        for y in range(Y_AXIS):
-            for z in range(Z_AXIS):
+    for x in range(X):
+        for y in range(Y):
+            for z in range(W):
                 # D[x,z] = C[(x - 1) mod 5, z] ⊕ C[(x+1) mod 5, (z – 1) mod w]
                 d = c_of_x_and_y((x - 1) %
                                  5, z) ^ c_of_x_and_y((x + 1) % 5, (z - 1) % W)
@@ -97,9 +147,8 @@ def theta(bits_box: np.ndarray):
     return out
 
 
-message = bytes.fromhex("aebcdf")
-padded_message = pad(message, 1600)
-d = one_d_to_three_d(padded_message)
-e = three_d_to_one_d(d)
-after_theta = theta(d)
-print(after_theta)
+RATE = 1088
+message = bytes("abc", "utf-8")
+padded_message = byte_padding(message, RATE)
+d = one_d_to_two_d(padded_message, RATE)
+print(d)
