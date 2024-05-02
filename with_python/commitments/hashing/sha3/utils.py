@@ -3,7 +3,7 @@ import sys
 from bitarray import bitarray
 import numpy as np
 
-from ..constants import X, Y, W, STATE_SIZE
+from ..constants import X, Y, W, STATE_SIZE, MAX_64_BIT_VALUE
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -79,8 +79,58 @@ def byte_padding(message: bytes, rate: int) -> bytes:
         return message + bytes.fromhex("06") + zeros_bytes + bytes.fromhex("80")
 
 
-def one_d_to_two_d(padded_message: bytes, rate: int) -> np.ndarray:
+def message_to_state_array(padded_message: bytes, rate: int) -> np.ndarray:
+    """
+    the goal of this function is to convert a message to a 5 x 5 array with 64-bit words.
+
+    we achieve this by taking the message in groups of 8 bytes, combine it into a 64-bit word and add it to the array downwards.
+
+    for example:
+
+        - given an array: [[(0, 0), (0, 1), (0, 2)], [(1, 0), (1, 1), (1, 2)]]
+        - by downwards, we mean that we add the first word to index (0, 0), second to (1, 0), third to (0, 1), 
+          fourth to (1, 1), fifth to (0, 2) and sixth to (1, 2)
+
+    loop logic:
+        - for the main loop, we loop through the length of the padded message
+          and increment by block size(rate // 8) so that we deal with the
+          message per block
+
+        - for the inner loop, we loop through 17(rate // 64) so that we can work with
+          every single byte in the block
+
+        - inside the inner loop:
+
+            - pre_index is the starting point and it helps us getting all 8 bytes in an iteration.
+              the values are 0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120 and 128 
+              when the index of the main loop is 0. so, for example using 0, we 0 to 7 and using 8 we 8 to 15
+              and so on. and, we achieve this using line 137 to 144
+
+            - line 146 to 156 is the most interesting part of this function because it uses a bit trick to achieve
+              bit concatenation and flipping.
+
+              the goal is to concatenate a set of 8-bit in reverse.
+
+              for example, say we wanted to do that for the message `abc`,
+
+                - the values of a, b and c in ascii is 97, 98 and 99 respectively
+
+                - 97 is 0110 0001, left-shift by 0; making it the same
+
+                - 98 is 0110 0010, left-shift by 8; making it 25088 and 0110 0010 0000 0000 in binary
+
+                - 99 is 0110 0011. left-shift by 16 making it 6488064 and 0110 0011 0000 0000 0000 0000 in binary
+
+                - when we add 6488064, 25088 and 97 we have 6513249 which is 0110 0011 0110 0010 0110 0001 in binary!
+
+                - this is the concatenation of 99, 98 and 97!
+
+        - the next part handles the downwards movement making it sure it goes down per column as explained above.
+
+    """
+
     out = np.zeros((X, Y), dtype=np.uint64)
+    state_array = out.tolist()
     for i in range(0, len(padded_message), rate // 8):
         for j in range(0, rate // W):
             pre_index = i + j * 8
@@ -108,47 +158,54 @@ def one_d_to_two_d(padded_message: bytes, rate: int) -> np.ndarray:
 
             x = j % 5
             y = j // 5
-            out[x][y] = int(out[x][y]) ^ combination
-    return out
+            state_array[x][y] = state_array[x][y] ^ combination
+    return state_array
 
 
-def three_d_to_one_d(bits_box: np.ndarray) -> bitarray:
-    """
-    implemented according to the spec(FIPS PUB 202), section 3.1.3
-    """
-    out = [[], [], [], [], []]  # Initialize empty array of size 1600
-    for x in range(X):
-        for y in range(Y):
-            for z in range(W):
-                out[W*(5*y+x)+z] = bits_box[x][y][z]
-    return bitarray(out.tolist())
+def left_rotate(n: int, b: int) -> int:
+    return ((n << b) | (n >> W - b)) & MAX_64_BIT_VALUE
 
 
-def theta(bits_box: np.ndarray):
+def theta(state_array: np.ndarray):
     """
     implemented according to the spec(FIPS PUB 202), section 3.2.1
     """
 
-    def c_of_x_and_y(bits_box, x, z):
-        # C[x,z] = A[x, 0 , z] ⊕ A[x, 1, z] ⊕ A[x, 2, z] ⊕ A[x, 3, z] ⊕ A[x, 4, z].
-        a = bits_box[x, 0, z] ^ bits_box[x, 1,
-                                         z] ^ bits_box[x, 2, z] ^ bits_box[x, 3, z] ^ bits_box[x, 4, z]
-        return a
+    c = []
+    d = []
 
-    out = np.zeros((5, 5, 64), dtype=int)
-    for x in range(X):
-        for y in range(Y):
-            for z in range(W):
-                # D[x,z] = C[(x - 1) mod 5, z] ⊕ C[(x+1) mod 5, (z – 1) mod w]
-                d = c_of_x_and_y((x - 1) %
-                                 5, z) ^ c_of_x_and_y((x + 1) % 5, (z - 1) % W)
-                # A′[x, y, z] = A[x, y, z] ⊕ D[x, z].
-                out[x, y, z] = bits_box[x, y, z] ^ d
-    return out
+    for i in range(5):
+        c.append(state_array[i][0])
+        for j in range(1, 5):
+            c[i] = c[i] ^ state_array[i][j]
+
+    for i in range(5):
+        d.append(c[(i + 4) % 5] ^ left_rotate(c[(i + 1) % 5], 1))
+        for j in range(5):
+            state_array[i][j] = state_array[i][j] ^ d[i]
+
+    return state_array
+
+
+def rho_and_pi(state_array: np.ndarray):
+    x, y = 1, 0
+
+    current = state_array[x][y]
+    for t in range(24):
+        X, Y = y, (2 * x + 3 * y) % 5
+        tmp = state_array[X][Y]
+        state_array[X][Y] = left_rotate(
+            current, ((((t + 1) * (t + 2)) // 2) % W))
+        current = tmp
+        x, y = X, Y
+
+    return state_array
 
 
 RATE = 1088
 message = bytes("abc", "utf-8")
 padded_message = byte_padding(message, RATE)
-d = one_d_to_two_d(padded_message, RATE)
-print(d)
+state_array = message_to_state_array(padded_message, RATE)
+state_array_after_theta = theta(state_array)
+state_array_after_rho_and_pi = rho_and_pi(state_array_after_theta)
+print(state_array_after_rho_and_pi)
