@@ -3,7 +3,7 @@ import sys
 from bitarray import bitarray
 import numpy as np
 
-from ..constants import X, Y, W, STATE_SIZE, MAX_64_BIT_VALUE
+from ..constants import X, Y, W, STATE_SIZE, MAX_64_BIT_VALUE, ROUNDS, ROUND_CONSTANTS
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -202,10 +202,26 @@ def rho_and_pi(state_array: np.ndarray):
     return state_array
 
 
+def chi(state_array: np.ndarray):
+
+    for i in range(5):
+        c = [state_array[j][i] for j in range(5)]
+        for j in range(5):
+            state_array[j][i] = c[j] ^ (~c[(j + 1) % 5] & c[(j + 2) % 5])
+
+    return state_array
+
+
+def keccak_f_1600(state_array):
+    for r in range(ROUNDS):
+        state_array = chi(rho_and_pi(theta(state_array)))
+        state_array[0][0] = state_array[0][0] ^ ROUND_CONSTANTS[r]
+    return state_array
+
+
 RATE = 1088
 message = bytes("abc", "utf-8")
 padded_message = byte_padding(message, RATE)
 state_array = message_to_state_array(padded_message, RATE)
-state_array_after_theta = theta(state_array)
-state_array_after_rho_and_pi = rho_and_pi(state_array_after_theta)
-print(state_array_after_rho_and_pi)
+state_array = keccak_f_1600(state_array)
+print(state_array)
