@@ -1,4 +1,5 @@
 import sys
+from typing import List
 
 from bitarray import bitarray
 import numpy as np
@@ -212,6 +213,15 @@ def chi(state_array: np.ndarray):
     return state_array
 
 
+def transpose(state_array: List[List[int]]):
+    transposed = np.zeros((X, Y), dtype=np.uint64).tolist()
+    for i, row in enumerate(state_array):
+        for j, _ in enumerate(row):
+            value = state_array[j][i]
+            transposed[i][j] = value
+    return transposed
+
+
 def keccak_f_1600(state_array):
     for r in range(ROUNDS):
         state_array = chi(rho_and_pi(theta(state_array)))
@@ -224,4 +234,6 @@ message = bytes("abc", "utf-8")
 padded_message = byte_padding(message, RATE)
 state_array = message_to_state_array(padded_message, RATE)
 state_array = keccak_f_1600(state_array)
+transposed = transpose(state_array)
 print(state_array)
+print(transposed)
