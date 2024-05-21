@@ -1,4 +1,5 @@
 import sys
+import re
 from typing import List
 
 from bitarray import bitarray
@@ -213,6 +214,13 @@ def chi(state_array: np.ndarray):
     return state_array
 
 
+def keccak_f_1600(state_array):
+    for r in range(ROUNDS):
+        state_array = chi(rho_and_pi(theta(state_array)))
+        state_array[0][0] = state_array[0][0] ^ ROUND_CONSTANTS[r]
+    return state_array
+
+
 def transpose(state_array: List[List[int]]):
     transposed = np.zeros((X, Y), dtype=np.uint64).tolist()
     for i, row in enumerate(state_array):
@@ -222,18 +230,28 @@ def transpose(state_array: List[List[int]]):
     return transposed
 
 
-def keccak_f_1600(state_array):
-    for r in range(ROUNDS):
-        state_array = chi(rho_and_pi(theta(state_array)))
-        state_array[0][0] = state_array[0][0] ^ ROUND_CONSTANTS[r]
-    return state_array
+def normalize(transposed_state_array: List[List[int]], l: int):
+    def normalize_inner_second(lane: int):
+        lane_as_string = hex(lane).removeprefix("0x").rjust(16, "0")
+        pattern = r".{2}"
+        lane_reversed = re.findall(pattern, lane_as_string)
+        lane_reversed.reverse()
+        new_lane = "".join(lane_reversed)
+        return new_lane
+
+    def normalize_inner(plane: List[int]):
+        new_planes = list(map(normalize_inner_second, plane))
+        return "".join(new_planes)
+
+    new_state_array = list(map(normalize_inner, transposed_state_array))
+    return "".join(new_state_array)[:l]
 
 
-RATE = 1088
-message = bytes("abc", "utf-8")
-padded_message = byte_padding(message, RATE)
-state_array = message_to_state_array(padded_message, RATE)
-state_array = keccak_f_1600(state_array)
-transposed = transpose(state_array)
-print(state_array)
-print(transposed)
+def sha3_hash(message: bytes, rate: int):
+    padded_message = byte_padding(message, rate)
+    state_array = message_to_state_array(padded_message, rate)
+    state_array = keccak_f_1600(state_array)
+    transposed = transpose(state_array)
+    output_length = ((STATE_SIZE - rate) // 2) // 4
+    normalized = normalize(transposed, output_length)
+    return normalized
