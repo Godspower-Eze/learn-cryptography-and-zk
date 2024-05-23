@@ -127,7 +127,7 @@ def keccak1600(padded_message: bytes, rate: int) -> np.ndarray:
 
                 - this is the concatenation of 99, 98 and 97!
 
-        - the next part handles the downwards movement making it sure it goes down per column as explained above.
+        - the next part handles the downwards movement making sure it goes down per column as explained above.
 
     """
 
