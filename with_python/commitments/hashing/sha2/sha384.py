@@ -24,6 +24,7 @@ class SHA_384(SHA_512):
         ).decode('utf-8')
 
 
+# TEST USING TEST VECTORS(https://www.di-mgt.com.au/sha_testvectors.html)
 if __name__ == "__main__":
     messages = [
         bytes("abc", "utf-8"),

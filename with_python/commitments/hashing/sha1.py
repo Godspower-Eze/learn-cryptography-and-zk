@@ -151,6 +151,7 @@ class SHA_1:
                                      (self.h0, self.h1, self.h2, self.h3, self.h4))
 
 
+# TEST USING TEST VECTORS(https://www.di-mgt.com.au/sha_testvectors.html)
 messages = [
     bytes("abc", "utf-8"),
     bytes("", "utf-8"),

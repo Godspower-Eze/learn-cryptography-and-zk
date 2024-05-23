@@ -103,6 +103,7 @@ class SHA_512(SHA_256):
         ).decode('utf-8')
 
 
+# TEST USING TEST VECTORS(https://www.di-mgt.com.au/sha_testvectors.html)
 if __name__ == "__main__":
     messages = [
         bytes("abc", "utf-8"),

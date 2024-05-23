@@ -81,7 +81,7 @@ def byte_padding(message: bytes, rate: int) -> bytes:
         return message + bytes.fromhex("06") + zeros_bytes + bytes.fromhex("80")
 
 
-def message_to_state_array(padded_message: bytes, rate: int) -> np.ndarray:
+def keccak1600(padded_message: bytes, rate: int) -> np.ndarray:
     """
     the goal of this function is to convert a message to a 5 x 5 array with 64-bit words.
 
@@ -161,6 +161,7 @@ def message_to_state_array(padded_message: bytes, rate: int) -> np.ndarray:
             x = j % 5
             y = j // 5
             state_array[x][y] = state_array[x][y] ^ combination
+        state_array = keccak_f_1600(state_array)
     return state_array
 
 
@@ -249,8 +250,7 @@ def normalize(transposed_state_array: List[List[int]], l: int):
 
 def sha3_hash(message: bytes, rate: int):
     padded_message = byte_padding(message, rate)
-    state_array = message_to_state_array(padded_message, rate)
-    state_array = keccak_f_1600(state_array)
+    state_array = keccak1600(padded_message, rate)
     transposed = transpose(state_array)
     output_length = ((STATE_SIZE - rate) // 2) // 4
     normalized = normalize(transposed, output_length)

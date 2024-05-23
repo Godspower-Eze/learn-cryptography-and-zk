@@ -6,9 +6,8 @@ RATE = 1152
 def hash(message: bytes):
     return sha3_hash(message, RATE)
 
-# TEST USING TEST VECTORS
 
-
+# TEST USING TEST VECTORS(https://www.di-mgt.com.au/sha_testvectors.html)
 if __name__ == "__main__":
     messages = [
         bytes("abc", "utf-8"),
@@ -28,5 +27,4 @@ if __name__ == "__main__":
     ]
     for m, d in zip(messages, digests):
         digest = hash(m)
-        print(digest)
         assert (digest == d)
