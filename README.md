@@ -2,7 +2,7 @@
 
 ## Overview
 
-A collection of cryptographic techniques implemented from scratch in Python.
+A collection of cryptographic techniques implemented from scratch in Python and Rust.
 
 ## Techniques
 
