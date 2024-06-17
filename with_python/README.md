@@ -1,3 +1,9 @@
+## About
+
+This focuses mainly on traditional cryptography with a bit of blockchain cryptography
+
+## Implementations
+
 ### Ancient Cryptography
 
 - [Ceasar Cipher](/with_python/ciphers/caesar_cipher.py)
