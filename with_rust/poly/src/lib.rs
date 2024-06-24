@@ -60,9 +60,9 @@ impl<F: FFE<S> + AddAssign, S: FF> Mul for UniPoly<F, S> {
         } else {
             let deg_a = self.coefficients.len() - 1;
             let deg_b = other.coefficients.len() - 1;
-            let product_max_degree = deg_a + deg_b + 1;
+            let max_coefficients = deg_a + deg_b + 1;
             let zero = F::zero();
-            let mut product_coefficients = vec![zero; product_max_degree];
+            let mut product_coefficients = vec![zero; max_coefficients];
             for i in 0..=self.degree() {
                 for j in 0..=other.degree() {
                     let index = i + j;
@@ -76,13 +76,30 @@ impl<F: FFE<S> + AddAssign, S: FF> Mul for UniPoly<F, S> {
     }
 }
 
-// // #[cfg(test)]
-// // mod tests {
-// //     use super::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-// //     #[test]
-// //     fn it_works() {
-// //         let result = add(2, 2);
-// //         assert_eq!(result, 4);
-// //     }
-// // }
+    struct TestField {}
+
+    impl FF for TestField {
+        type FieldType = usize;
+
+        const GENERATOR: usize = 5;
+
+        const MODULUS: usize = 3221225473;
+
+        fn zero() -> Self::FieldType {
+            0
+        }
+
+        fn one() -> Self::FieldType {
+            1
+        }
+    }
+
+    #[test]
+    fn multiplication() {
+        let poly_1: UniPoly<i32, _> = UniPoly::new(vec![2, 0, 1]);
+    }
+}

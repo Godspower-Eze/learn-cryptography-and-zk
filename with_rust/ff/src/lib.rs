@@ -15,8 +15,14 @@ pub trait FF: Sized {
     fn one() -> Self::FieldType;
 }
 
-pub trait FFE<F: FF>: Sized + Copy + Mul<Output = Self> + PartialEq {
+pub trait FFE<F: FF>: Sized + Copy + Mul<Output = Self> + PartialEq + From<usize> {
+    const ELEMENT: usize;
+
     fn from_field(field: F::FieldType) -> Self;
+
+    fn element() -> Self {
+        (Self::ELEMENT % F::MODULUS).into()
+    }
 
     fn generator() -> Self {
         Self::from_field(F::GENERATOR.into())
@@ -92,24 +98,24 @@ impl Rem<usize> for ISize {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ST101Field {}
+// #[derive(Debug, Clone, Copy, PartialEq)]
+// pub struct ST101Field {}
 
-impl FF for ST101Field {
-    type FieldType = usize;
+// impl FF for ST101Field {
+//     type FieldType = usize;
 
-    const GENERATOR: usize = 5;
+//     const GENERATOR: usize = 5;
 
-    const MODULUS: usize = 3221225473;
+//     const MODULUS: usize = 3221225473;
 
-    fn zero() -> Self::FieldType {
-        0
-    }
+//     fn zero() -> Self::FieldType {
+//         0
+//     }
 
-    fn one() -> Self::FieldType {
-        1
-    }
-}
+//     fn one() -> Self::FieldType {
+//         1
+//     }
+// }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ST101FieldElement<F: FF> {
@@ -167,36 +173,36 @@ impl<F: FF<FieldType = usize>> Sub for ST101FieldElement<F> {
 mod tests {
     use crate::*;
 
-    //     #[test]
-    //     fn add() {
-    //         let ffe_1 = FINITE_FIELD.new(322122547).unwrap();
-    //         let ffe_2 = FINITE_FIELD.new(8902).unwrap();
-    //         let new_ff = ffe_1 + ffe_2;
-    //         assert_eq!(
-    //             new_ff.unwrap(),
-    //             FFE {
-    //                 value: 322131449,
-    //                 ff: &FINITE_FIELD
-    //             }
-    //         );
+    // #[test]
+    // fn add() {
+    //     let ffe_1 = FINITE_FIELD.new(322122547).unwrap();
+    //     let ffe_2 = FINITE_FIELD.new(8902).unwrap();
+    //     let new_ff = ffe_1 + ffe_2;
+    //     assert_eq!(
+    //         new_ff.unwrap(),
+    //         FFE {
+    //             value: 322131449,
+    //             ff: &FINITE_FIELD
+    //         }
+    //     );
 
-    //         let ffe_3 = FINITE_FIELD.new(-67).unwrap();
-    //         let ffe_4 = FINITE_FIELD.new(60).unwrap();
-    //         let new_ff = ffe_3 + ffe_4;
-    //         assert_eq!(
-    //             new_ff.unwrap(),
-    //             FFE {
-    //                 value: 3221225466,
-    //                 ff: &FINITE_FIELD
-    //             }
-    //         );
+    //     let ffe_3 = FINITE_FIELD.new(-67).unwrap();
+    //     let ffe_4 = FINITE_FIELD.new(60).unwrap();
+    //     let new_ff = ffe_3 + ffe_4;
+    //     assert_eq!(
+    //         new_ff.unwrap(),
+    //         FFE {
+    //             value: 3221225466,
+    //             ff: &FINITE_FIELD
+    //         }
+    //     );
 
-    //         let ffe_5 = FINITE_FIELD.new(67).unwrap();
-    //         let ff = FF::init(1, 5).unwrap();
-    //         let ffe_6 = ff.new(60).unwrap();
-    //         let new_ff = ffe_5 + ffe_6;
-    //         assert!(new_ff.is_err());
-    //     }
+    //     let ffe_5 = FINITE_FIELD.new(67).unwrap();
+    //     let ff = FF::init(1, 5).unwrap();
+    //     let ffe_6 = ff.new(60).unwrap();
+    //     let new_ff = ffe_5 + ffe_6;
+    //     assert!(new_ff.is_err());
+    // }
 
     //     #[test]
     //     fn mul() {
