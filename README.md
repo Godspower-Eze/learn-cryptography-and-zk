@@ -1,8 +1,8 @@
-# Learn Cryptography - cryptography from scratch
+# Learn Cryptography and ZK - cryptography and zero-knowledge proofs from scratch
 
 ## Overview
 
-A collection of cryptographic techniques implemented from scratch in Python and Rust.
+A collection of cryptographic and zero-knowledge algorithms implemented from scratch in Python and Rust.
 
 ## Implementations
 
@@ -15,4 +15,4 @@ This serves as a learning material for me in my journey to becoming proficient a
 
 ## Disclamer
 
-You probably know this but DO NOT USE IN PRODUCTION.
+You probably know this, but please DO NOT USE IN PRODUCTION.
