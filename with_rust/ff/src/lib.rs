@@ -1,44 +1,62 @@
 use std::{
-    ops::{Add, AddAssign, Mul, Rem, Sub},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, Sub, SubAssign},
     usize,
 };
 
-pub trait FF: Sized {
-    type FieldType: From<usize> + Default + Add + Mul + Rem + Sub + AddAssign;
-
-    const GENERATOR: usize;
-
-    const MODULUS: usize;
-
-    fn zero() -> Self::FieldType;
-
-    fn one() -> Self::FieldType;
+struct ISize {
+    value: isize,
 }
 
-pub trait FFE<F: FF>: Sized + Copy + Mul<Output = Self> + PartialEq + From<usize> {
-    const ELEMENT: usize;
+impl Rem<usize> for ISize {
+    type Output = usize;
 
-    fn from_field(field: F::FieldType) -> Self;
-
-    fn element() -> Self {
-        (Self::ELEMENT % F::MODULUS).into()
+    fn rem(self, rhs: usize) -> Self::Output {
+        if self.value.is_negative() {
+            // -a mod b = (b - (a mod b) mod b
+            (rhs - (self.value.abs() as usize % rhs)) % rhs
+        } else {
+            let val = self.value as usize;
+            val % rhs
+        }
     }
+}
 
-    fn generator() -> Self {
-        Self::from_field(F::GENERATOR.into())
-    }
+pub trait FF {
+    type FieldType;
 
-    fn modulus() -> Self {
-        Self::from_field(F::MODULUS.into())
+    const GENERATOR: Self::FieldType;
+
+    const MODULUS: Self::FieldType;
+}
+
+pub trait FFE<F: FF>:
+    Sized
+    + PartialEq
+    + Copy
+    + Add
+    + Sub
+    + Mul<Output = Self>
+    + Div
+    + SubAssign
+    + AddAssign
+    + MulAssign
+    + DivAssign
+{
+    fn from_field(element: isize) -> Self;
+
+    fn new(element: isize) -> Self {
+        Self::from_field(element)
     }
 
     fn zero() -> Self {
-        Self::from_field(F::zero())
+        Self::from_field(0)
     }
 
     fn one() -> Self {
-        Self::from_field(F::one())
+        Self::from_field(1)
     }
+
+    fn inverse() -> Self;
 
     fn pow(&self, mut n: usize) -> Result<Self, Error> {
         let mut current_power = self.to_owned();
@@ -80,189 +98,191 @@ pub enum Error {
     DifferentModulus,
 }
 
-struct ISize {
-    value: isize,
-}
-
-impl Rem<usize> for ISize {
-    type Output = usize;
-
-    fn rem(self, rhs: usize) -> Self::Output {
-        if self.value.is_negative() {
-            // -a mod b = (b - (a mod b) mod b
-            (rhs - (self.value.abs() as usize % rhs)) % rhs
-        } else {
-            let val = self.value as usize;
-            val % rhs
-        }
-    }
-}
-
-// #[derive(Debug, Clone, Copy, PartialEq)]
-// pub struct ST101Field {}
-
-// impl FF for ST101Field {
-//     type FieldType = usize;
-
-//     const GENERATOR: usize = 5;
-
-//     const MODULUS: usize = 3221225473;
-
-//     fn zero() -> Self::FieldType {
-//         0
-//     }
-
-//     fn one() -> Self::FieldType {
-//         1
-//     }
-// }
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ST101FieldElement<F: FF> {
-    element: F::FieldType,
-}
-
-impl<F: FF<FieldType = usize> + Copy + PartialEq> FFE<F> for ST101FieldElement<F> {
-    fn from_field(element: F::FieldType) -> Self {
-        ST101FieldElement { element }
-    }
-}
-
-impl<F: FF<FieldType = usize>> Add for ST101FieldElement<F> {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self {
-            element: (self.element + rhs.element) % F::MODULUS,
-        }
-    }
-}
-
-impl<F: FF<FieldType = usize> + Copy> AddAssign for ST101FieldElement<F> {
-    fn add_assign(&mut self, rhs: Self) {
-        let addition = *self + rhs;
-        *self = addition;
-    }
-}
-
-impl<F: FF<FieldType = usize>> Mul for ST101FieldElement<F> {
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Self {
-            element: (self.element * rhs.element) % F::MODULUS,
-        }
-    }
-}
-
-impl<F: FF<FieldType = usize>> Sub for ST101FieldElement<F> {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        // TODO: investigate safety of conversion
-        let (sub, _) = self.element.overflowing_sub(rhs.element);
-        Self {
-            element: ISize {
-                value: sub as isize,
-            } % F::MODULUS,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::*;
+    use std::ops::{Add, AddAssign, Div, Sub};
 
-    // #[test]
-    // fn add() {
-    //     let ffe_1 = FINITE_FIELD.new(322122547).unwrap();
-    //     let ffe_2 = FINITE_FIELD.new(8902).unwrap();
-    //     let new_ff = ffe_1 + ffe_2;
-    //     assert_eq!(
-    //         new_ff.unwrap(),
-    //         FFE {
-    //             value: 322131449,
-    //             ff: &FINITE_FIELD
-    //         }
-    //     );
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    struct TestFF {}
 
-    //     let ffe_3 = FINITE_FIELD.new(-67).unwrap();
-    //     let ffe_4 = FINITE_FIELD.new(60).unwrap();
-    //     let new_ff = ffe_3 + ffe_4;
-    //     assert_eq!(
-    //         new_ff.unwrap(),
-    //         FFE {
-    //             value: 3221225466,
-    //             ff: &FINITE_FIELD
-    //         }
-    //     );
+    impl FF for TestFF {
+        type FieldType = usize;
+        const GENERATOR: usize = 5;
+        const MODULUS: usize = 3221225473;
+    }
 
-    //     let ffe_5 = FINITE_FIELD.new(67).unwrap();
-    //     let ff = FF::init(1, 5).unwrap();
-    //     let ffe_6 = ff.new(60).unwrap();
-    //     let new_ff = ffe_5 + ffe_6;
-    //     assert!(new_ff.is_err());
-    // }
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    struct TestFFE<F: FF> {
+        element: F::FieldType,
+    }
 
-    //     #[test]
-    //     fn mul() {
-    //         let ffe_1 = FINITE_FIELD.new(1912323).unwrap();
-    //         let ffe_2 = FINITE_FIELD.new(111091).unwrap();
-    //         let new_ff = ffe_1 * ffe_2;
-    //         assert_eq!(
-    //             new_ff.unwrap(),
-    //             FFE {
-    //                 value: 3062218648,
-    //                 ff: &FINITE_FIELD
-    //             }
-    //         );
+    impl<F: FF<FieldType = usize> + Copy + PartialEq> FFE<F> for TestFFE<F> {
+        fn from_field(value: isize) -> Self {
+            let field_element = ISize { value } % F::MODULUS;
+            TestFFE {
+                element: field_element,
+            }
+        }
 
-    //         let ffe_3 = FINITE_FIELD.new(67).unwrap();
-    //         let ffe_4 = FINITE_FIELD.new(4).unwrap();
-    //         let new_ff = ffe_3 * ffe_4;
-    //         assert_eq!(
-    //             new_ff.unwrap(),
-    //             FFE {
-    //                 value: 268,
-    //                 ff: &FINITE_FIELD
-    //             }
-    //         );
+        fn inverse() -> Self {
+            todo!()
+        }
+    }
 
-    //         let ffe_5 = FINITE_FIELD.new(67).unwrap();
-    //         let ff = FF::init(1, 5).unwrap();
-    //         let ffe_6 = ff.new(60).unwrap();
-    //         let new_ff = ffe_5 * ffe_6;
-    //         assert!(new_ff.is_err());
-    //     }
+    impl<F: FF<FieldType = usize>> Add for TestFFE<F> {
+        type Output = Self;
 
-    //     #[test]
-    //     fn sub() {
-    //         let ffe_1 = FINITE_FIELD.new(892).unwrap();
-    //         let ffe_2 = FINITE_FIELD.new(7).unwrap();
-    //         let new_ff = ffe_1 - ffe_2;
-    //         assert_eq!(
-    //             new_ff.unwrap(),
-    //             FFE {
-    //                 value: 885,
-    //                 ff: &FINITE_FIELD
-    //             }
-    //         );
+        fn add(self, rhs: Self) -> Self::Output {
+            Self {
+                element: (self.element + rhs.element) % F::MODULUS,
+            }
+        }
+    }
 
-    //         let ffe_3 = FINITE_FIELD.new(2).unwrap();
-    //         let ffe_4 = FINITE_FIELD.new(11).unwrap();
-    //         let new_ff = ffe_3 - ffe_4;
-    //         assert_eq!(
-    //             new_ff.unwrap(),
-    //             FFE {
-    //                 value: 3221225464,
-    //                 ff: &FINITE_FIELD
-    //             }
-    //         );
+    impl<F: FF<FieldType = usize> + Copy> AddAssign for TestFFE<F> {
+        fn add_assign(&mut self, rhs: Self) {
+            let addition = *self + rhs;
+            *self = addition;
+        }
+    }
 
-    //         let ffe_5 = FINITE_FIELD.new(67).unwrap();
-    //         let ff = FF::init(1, 5).unwrap();
-    //         let ffe_6 = ff.new(60).unwrap();
-    //         let new_ff = ffe_5 - ffe_6;
-    //         assert!(new_ff.is_err());
-    //     }
+    impl<F: FF<FieldType = usize>> Mul for TestFFE<F> {
+        type Output = Self;
+
+        fn mul(self, rhs: Self) -> Self::Output {
+            Self {
+                element: (self.element * rhs.element) % F::MODULUS,
+            }
+        }
+    }
+
+    impl<F: FF<FieldType = usize> + Copy> MulAssign for TestFFE<F> {
+        fn mul_assign(&mut self, rhs: Self) {
+            let mul = *self * rhs;
+            *self = mul;
+        }
+    }
+
+    impl<F: FF<FieldType = usize>> Sub for TestFFE<F> {
+        type Output = Self;
+
+        fn sub(self, rhs: Self) -> Self::Output {
+            // TODO: investigate safety of conversion
+            let (sub, _) = self.element.overflowing_sub(rhs.element);
+            Self {
+                element: ISize {
+                    value: sub as isize,
+                } % F::MODULUS,
+            }
+        }
+    }
+
+    impl<F: FF<FieldType = usize> + Copy> SubAssign for TestFFE<F> {
+        fn sub_assign(&mut self, rhs: Self) {
+            let sub = *self - rhs;
+            *self = sub;
+        }
+    }
+
+    impl<F: FF<FieldType = usize> + Copy> Div for TestFFE<F> {
+        type Output = Self;
+        fn div(self, rhs: Self) -> Self::Output {
+            todo!()
+        }
+    }
+
+    impl<F: FF<FieldType = usize>> DivAssign for TestFFE<F> {
+        fn div_assign(&mut self, rhs: Self) {
+            todo!()
+        }
+    }
+
+    #[test]
+    fn assignment() {
+        let ffe_1 = TestFFE::<TestFF>::new(-56);
+        let ffe_2 = TestFFE::<TestFF>::new(9704);
+        let ffe_3 = TestFFE::<TestFF>::new(3221225477);
+        assert_eq!(
+            ffe_1,
+            TestFFE {
+                element: 3221225417
+            }
+        );
+        assert_eq!(ffe_2, TestFFE { element: 9704 });
+        assert_eq!(ffe_3, TestFFE { element: 4 });
+    }
+
+    #[test]
+    fn add() {
+        let ffe_1 = TestFFE::<TestFF>::new(56);
+        let ffe_2 = TestFFE::<TestFF>::new(8902);
+        let new_ff = ffe_1 + ffe_2;
+        assert_eq!(new_ff, TestFFE { element: 8958 });
+    }
+
+    #[test]
+    fn add_assign() {
+        let mut ffe_1 = TestFFE::<TestFF>::new(56);
+        let ffe_2 = TestFFE::<TestFF>::new(8902);
+        ffe_1 += ffe_2;
+        assert_eq!(ffe_1, TestFFE { element: 8958 });
+    }
+
+    #[test]
+    fn mul() {
+        let ffe_1 = TestFFE::<TestFF>::new(1912323);
+        let ffe_2 = TestFFE::<TestFF>::new(111091);
+        let new_ff = ffe_1 * ffe_2;
+        assert_eq!(
+            new_ff,
+            TestFFE {
+                element: 3062218648
+            }
+        );
+    }
+
+    #[test]
+    fn mul_assign() {
+        let mut ffe_1 = TestFFE::<TestFF>::new(1912323);
+        let ffe_2 = TestFFE::<TestFF>::new(111091);
+        ffe_1 *= ffe_2;
+        assert_eq!(
+            ffe_1,
+            TestFFE {
+                element: 3062218648
+            }
+        );
+    }
+
+    #[test]
+    fn sub() {
+        let ffe_1 = TestFFE::<TestFF>::new(892);
+        let ffe_2 = TestFFE::<TestFF>::new(7);
+        let new_ff = ffe_1 - ffe_2;
+        assert_eq!(new_ff, TestFFE { element: 885 });
+
+        let ffe_3 = TestFFE::<TestFF>::new(2);
+        let ffe_4 = TestFFE::<TestFF>::new(11);
+        let new_ff = ffe_3 - ffe_4;
+        assert_eq!(
+            new_ff,
+            TestFFE {
+                element: 3221225464
+            }
+        );
+    }
+
+    #[test]
+    fn sub_assign() {
+        let mut ffe_1 = TestFFE::<TestFF>::new(2);
+        let ffe_2 = TestFFE::<TestFF>::new(11);
+        ffe_1 -= ffe_2;
+        assert_eq!(
+            ffe_1,
+            TestFFE {
+                element: 3221225464
+            }
+        );
+    }
 }
