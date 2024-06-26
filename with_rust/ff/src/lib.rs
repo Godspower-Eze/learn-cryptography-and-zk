@@ -56,7 +56,7 @@ pub trait FFE<F: FF>:
         Self::from_field(1)
     }
 
-    fn inverse() -> Self;
+    fn inverse(&self) -> Self;
 
     fn pow(&self, mut n: usize) -> Result<Self, Error> {
         let mut current_power = self.to_owned();
@@ -98,6 +98,41 @@ pub enum Error {
     DifferentModulus,
 }
 
+fn multiplicative_inverse(a: usize, b: usize) -> Result<usize, String> {
+    /*
+     * Computes the multiplicative inverse of a mod b
+     * using the "Extended Euclidean Algorithm"
+     */
+
+    let modulus = b;
+
+    let (mut m, mut n);
+    if a > b {
+        m = a;
+        n = b;
+    } else {
+        m = b;
+        n = a;
+    }
+    let mut q = m / n; // quotient
+    let mut r = m % n; // remainder
+    let (mut t_0, mut t_1) = (0, 1);
+    let mut t = t_0 - (t_1 * q);
+
+    while n != 0 {
+        (m, n) = (n, r);
+        (t_0, t_1) = (t_1, t);
+        q = m / n;
+        r = m % n;
+        t = t_0 - t_1 * q
+    }
+
+    match n {
+        1 => Ok(t_1 % modulus),
+        _ => Err(String::from("Nultiplicative inverse does not exist")),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;
@@ -125,8 +160,9 @@ mod tests {
             }
         }
 
-        fn inverse() -> Self {
-            todo!()
+        fn inverse(&self) -> Self {
+            let inv = multiplicative_inverse(self.element, F::MODULUS).unwrap();
+            Self { element: inv }
         }
     }
 
@@ -185,16 +221,19 @@ mod tests {
         }
     }
 
-    impl<F: FF<FieldType = usize> + Copy> Div for TestFFE<F> {
+    impl<F: FF<FieldType = usize> + Copy + PartialEq> Div for TestFFE<F> {
         type Output = Self;
+
         fn div(self, rhs: Self) -> Self::Output {
-            todo!()
+            let inv = rhs.inverse();
+            self * inv
         }
     }
 
-    impl<F: FF<FieldType = usize>> DivAssign for TestFFE<F> {
+    impl<F: FF<FieldType = usize> + Copy + PartialEq> DivAssign for TestFFE<F> {
         fn div_assign(&mut self, rhs: Self) {
-            todo!()
+            let div = *self / rhs;
+            *self = div;
         }
     }
 
@@ -284,5 +323,24 @@ mod tests {
                 element: 3221225464
             }
         );
+    }
+
+    #[test]
+    fn div() {
+        let ffe_1 = TestFFE::<TestFF>::new(892);
+        let ffe_2 = TestFFE::<TestFF>::new(7);
+        let new_ff = ffe_1 / ffe_2;
+        println!("{:?}", new_ff);
+        assert_eq!(new_ff, TestFFE { element: 885 });
+
+        // let ffe_3 = TestFFE::<TestFF>::new(2);
+        // let ffe_4 = TestFFE::<TestFF>::new(11);
+        // let new_ff = ffe_3 / ffe_4;
+        // assert_eq!(
+        //     new_ff,
+        //     TestFFE {
+        //         element: 3221225464
+        //     }
+        // );
     }
 }
