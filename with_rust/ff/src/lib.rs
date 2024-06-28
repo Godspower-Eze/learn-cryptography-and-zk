@@ -1,4 +1,5 @@
 use std::{
+    fmt::Debug,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, Sub, SubAssign},
     usize,
 };
@@ -21,10 +22,8 @@ impl Rem<usize> for ISize {
     }
 }
 
-pub trait FF {
+pub trait FF: Debug {
     type FieldType;
-
-    const GENERATOR: Self::FieldType;
 
     const MODULUS: Self::FieldType;
 }
@@ -32,6 +31,7 @@ pub trait FF {
 pub trait FFE<F: FF>:
     Sized
     + PartialEq
+    + Debug
     + Copy
     + Add
     + Sub
@@ -84,36 +84,27 @@ pub trait FFE<F: FF>:
          *
          * We can perform a simple trick on the second part to make this a bit faster:
          *
-         * - subtract the modulus from the element being checked; getting a negative number
-         *   already smaller than the main number and equal to that number `mod` the modulus
-         *
-         * - Then, instead of performing exponentiation on every iteration, we multiply by the previous multiple
+         * - Instead of performing exponentiation on every iteration, we multiply by the previous multiple(i.e memoization)
          */
 
         let identity = Self::one();
         let exp = self.pow(order);
         let res = if identity == exp {
-            let mut res = true;
-            for i in 1..order {
-                let exp_inner = self.pow(i);
-                if exp_inner == identity {
-                    res = false;
+            let mut res_inner = true;
+            let mut mul = *self;
+            for _ in 2..order {
+                mul *= *self;
+                if mul == identity {
+                    res_inner = false;
                     break;
                 }
             }
-            res
+            res_inner
         } else {
             false
         };
         return res;
     }
-}
-
-#[derive(Debug)]
-pub enum Error {
-    InvalidModulus,
-    InvalidPower,
-    DifferentModulus,
 }
 
 pub fn multiplicative_inverse(a: isize, b: isize) -> Result<usize, String> {
@@ -138,21 +129,12 @@ pub fn multiplicative_inverse(a: isize, b: isize) -> Result<usize, String> {
     let mut t_1 = 1;
     let mut t = t_0 - (t_1 * q);
 
-    println!(
-        "m: {}\nn: {}\nq: {}\nr: {}\nt_0: {}\nt_1: {}\nt: {}",
-        m, n, q, r, t_0, t_1, t
-    );
-
     while r != 0 {
         (m, n) = (n, r);
         (t_0, t_1) = (t_1, t);
         q = m / n;
         r = m % n;
         t = t_0 - (t_1 * q);
-        println!(
-            "m: {}\nn: {}\nq: {}\nr: {}\nt_0: {}\nt_1: {}\nt: {}",
-            m, n, q, r, t_0, t_1, t
-        );
     }
 
     match n {
@@ -161,113 +143,111 @@ pub fn multiplicative_inverse(a: isize, b: isize) -> Result<usize, String> {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SampleFF {}
+
+impl FF for SampleFF {
+    type FieldType = usize;
+    const MODULUS: usize = 3221225473;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SampleFFE<F: FF> {
+    element: F::FieldType,
+}
+
+impl<F: FF<FieldType = usize> + Copy + PartialEq> FFE<F> for SampleFFE<F> {
+    fn from_field(value: isize) -> Self {
+        let field_element = ISize { value } % F::MODULUS;
+        SampleFFE {
+            element: field_element,
+        }
+    }
+
+    fn inverse(&self) -> Self {
+        let inv = multiplicative_inverse(
+            self.element.try_into().unwrap(),
+            F::MODULUS.try_into().unwrap(),
+        )
+        .unwrap();
+        Self { element: inv }
+    }
+}
+
+impl<F: FF<FieldType = usize>> Add for SampleFFE<F> {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            element: (self.element + rhs.element) % F::MODULUS,
+        }
+    }
+}
+
+impl<F: FF<FieldType = usize> + Copy> AddAssign for SampleFFE<F> {
+    fn add_assign(&mut self, rhs: Self) {
+        let addition = *self + rhs;
+        *self = addition;
+    }
+}
+
+impl<F: FF<FieldType = usize>> Mul for SampleFFE<F> {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
+            element: (self.element * rhs.element) % F::MODULUS,
+        }
+    }
+}
+
+impl<F: FF<FieldType = usize> + Copy> MulAssign for SampleFFE<F> {
+    fn mul_assign(&mut self, rhs: Self) {
+        let mul = *self * rhs;
+        *self = mul;
+    }
+}
+
+impl<F: FF<FieldType = usize>> Sub for SampleFFE<F> {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        // TODO: investigate safety of conversion
+        let (sub, _) = self.element.overflowing_sub(rhs.element);
+        Self {
+            element: ISize {
+                value: sub as isize,
+            } % F::MODULUS,
+        }
+    }
+}
+
+impl<F: FF<FieldType = usize> + Copy> SubAssign for SampleFFE<F> {
+    fn sub_assign(&mut self, rhs: Self) {
+        let sub = *self - rhs;
+        *self = sub;
+    }
+}
+
+impl<F: FF<FieldType = usize> + Copy + PartialEq> Div for SampleFFE<F> {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        let inv = rhs.inverse();
+        self * inv
+    }
+}
+
+impl<F: FF<FieldType = usize> + Copy + PartialEq> DivAssign for SampleFFE<F> {
+    fn div_assign(&mut self, rhs: Self) {
+        let div = *self / rhs;
+        *self = div;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;
-    use std::ops::{Add, AddAssign, Div, Sub};
-
-    #[derive(Debug, Clone, Copy, PartialEq)]
-    struct TestFF {}
-
-    impl FF for TestFF {
-        type FieldType = usize;
-        const GENERATOR: usize = 5;
-        const MODULUS: usize = 3221225473;
-    }
-
-    #[derive(Debug, Clone, Copy, PartialEq)]
-    struct TestFFE<F: FF> {
-        element: F::FieldType,
-    }
-
-    impl<F: FF<FieldType = usize> + Copy + PartialEq> FFE<F> for TestFFE<F> {
-        fn from_field(value: isize) -> Self {
-            let field_element = ISize { value } % F::MODULUS;
-            TestFFE {
-                element: field_element,
-            }
-        }
-
-        fn inverse(&self) -> Self {
-            let inv = multiplicative_inverse(
-                self.element.try_into().unwrap(),
-                F::MODULUS.try_into().unwrap(),
-            )
-            .unwrap();
-            Self { element: inv }
-        }
-    }
-
-    impl<F: FF<FieldType = usize>> Add for TestFFE<F> {
-        type Output = Self;
-
-        fn add(self, rhs: Self) -> Self::Output {
-            Self {
-                element: (self.element + rhs.element) % F::MODULUS,
-            }
-        }
-    }
-
-    impl<F: FF<FieldType = usize> + Copy> AddAssign for TestFFE<F> {
-        fn add_assign(&mut self, rhs: Self) {
-            let addition = *self + rhs;
-            *self = addition;
-        }
-    }
-
-    impl<F: FF<FieldType = usize>> Mul for TestFFE<F> {
-        type Output = Self;
-
-        fn mul(self, rhs: Self) -> Self::Output {
-            Self {
-                element: (self.element * rhs.element) % F::MODULUS,
-            }
-        }
-    }
-
-    impl<F: FF<FieldType = usize> + Copy> MulAssign for TestFFE<F> {
-        fn mul_assign(&mut self, rhs: Self) {
-            let mul = *self * rhs;
-            *self = mul;
-        }
-    }
-
-    impl<F: FF<FieldType = usize>> Sub for TestFFE<F> {
-        type Output = Self;
-
-        fn sub(self, rhs: Self) -> Self::Output {
-            // TODO: investigate safety of conversion
-            let (sub, _) = self.element.overflowing_sub(rhs.element);
-            Self {
-                element: ISize {
-                    value: sub as isize,
-                } % F::MODULUS,
-            }
-        }
-    }
-
-    impl<F: FF<FieldType = usize> + Copy> SubAssign for TestFFE<F> {
-        fn sub_assign(&mut self, rhs: Self) {
-            let sub = *self - rhs;
-            *self = sub;
-        }
-    }
-
-    impl<F: FF<FieldType = usize> + Copy + PartialEq> Div for TestFFE<F> {
-        type Output = Self;
-
-        fn div(self, rhs: Self) -> Self::Output {
-            let inv = rhs.inverse();
-            self * inv
-        }
-    }
-
-    impl<F: FF<FieldType = usize> + Copy + PartialEq> DivAssign for TestFFE<F> {
-        fn div_assign(&mut self, rhs: Self) {
-            let div = *self / rhs;
-            *self = div;
-        }
-    }
 
     #[test]
     fn mi() {
@@ -281,43 +261,43 @@ mod tests {
 
     #[test]
     fn assignment() {
-        let ffe_1 = TestFFE::<TestFF>::new(-56);
-        let ffe_2 = TestFFE::<TestFF>::new(9704);
-        let ffe_3 = TestFFE::<TestFF>::new(3221225477);
+        let ffe_1 = SampleFFE::<SampleFF>::new(-56);
+        let ffe_2 = SampleFFE::<SampleFF>::new(9704);
+        let ffe_3 = SampleFFE::<SampleFF>::new(3221225477);
         assert_eq!(
             ffe_1,
-            TestFFE {
+            SampleFFE {
                 element: 3221225417
             }
         );
-        assert_eq!(ffe_2, TestFFE { element: 9704 });
-        assert_eq!(ffe_3, TestFFE { element: 4 });
+        assert_eq!(ffe_2, SampleFFE { element: 9704 });
+        assert_eq!(ffe_3, SampleFFE { element: 4 });
     }
 
     #[test]
     fn add() {
-        let ffe_1 = TestFFE::<TestFF>::new(56);
-        let ffe_2 = TestFFE::<TestFF>::new(8902);
+        let ffe_1 = SampleFFE::<SampleFF>::new(56);
+        let ffe_2 = SampleFFE::<SampleFF>::new(8902);
         let new_ff = ffe_1 + ffe_2;
-        assert_eq!(new_ff, TestFFE { element: 8958 });
+        assert_eq!(new_ff, SampleFFE { element: 8958 });
     }
 
     #[test]
     fn add_assign() {
-        let mut ffe_1 = TestFFE::<TestFF>::new(56);
-        let ffe_2 = TestFFE::<TestFF>::new(8902);
+        let mut ffe_1 = SampleFFE::<SampleFF>::new(56);
+        let ffe_2 = SampleFFE::<SampleFF>::new(8902);
         ffe_1 += ffe_2;
-        assert_eq!(ffe_1, TestFFE { element: 8958 });
+        assert_eq!(ffe_1, SampleFFE { element: 8958 });
     }
 
     #[test]
     fn mul() {
-        let ffe_1 = TestFFE::<TestFF>::new(1912323);
-        let ffe_2 = TestFFE::<TestFF>::new(111091);
+        let ffe_1 = SampleFFE::<SampleFF>::new(1912323);
+        let ffe_2 = SampleFFE::<SampleFF>::new(111091);
         let new_ff = ffe_1 * ffe_2;
         assert_eq!(
             new_ff,
-            TestFFE {
+            SampleFFE {
                 element: 3062218648
             }
         );
@@ -325,12 +305,12 @@ mod tests {
 
     #[test]
     fn mul_assign() {
-        let mut ffe_1 = TestFFE::<TestFF>::new(1912323);
-        let ffe_2 = TestFFE::<TestFF>::new(111091);
+        let mut ffe_1 = SampleFFE::<SampleFF>::new(1912323);
+        let ffe_2 = SampleFFE::<SampleFF>::new(111091);
         ffe_1 *= ffe_2;
         assert_eq!(
             ffe_1,
-            TestFFE {
+            SampleFFE {
                 element: 3062218648
             }
         );
@@ -338,17 +318,17 @@ mod tests {
 
     #[test]
     fn sub() {
-        let ffe_1 = TestFFE::<TestFF>::new(892);
-        let ffe_2 = TestFFE::<TestFF>::new(7);
+        let ffe_1 = SampleFFE::<SampleFF>::new(892);
+        let ffe_2 = SampleFFE::<SampleFF>::new(7);
         let new_ff = ffe_1 - ffe_2;
-        assert_eq!(new_ff, TestFFE { element: 885 });
+        assert_eq!(new_ff, SampleFFE { element: 885 });
 
-        let ffe_3 = TestFFE::<TestFF>::new(2);
-        let ffe_4 = TestFFE::<TestFF>::new(11);
+        let ffe_3 = SampleFFE::<SampleFF>::new(2);
+        let ffe_4 = SampleFFE::<SampleFF>::new(11);
         let new_ff = ffe_3 - ffe_4;
         assert_eq!(
             new_ff,
-            TestFFE {
+            SampleFFE {
                 element: 3221225464
             }
         );
@@ -356,12 +336,12 @@ mod tests {
 
     #[test]
     fn sub_assign() {
-        let mut ffe_1 = TestFFE::<TestFF>::new(2);
-        let ffe_2 = TestFFE::<TestFF>::new(11);
+        let mut ffe_1 = SampleFFE::<SampleFF>::new(2);
+        let ffe_2 = SampleFFE::<SampleFF>::new(11);
         ffe_1 -= ffe_2;
         assert_eq!(
             ffe_1,
-            TestFFE {
+            SampleFFE {
                 element: 3221225464
             }
         );
@@ -369,18 +349,17 @@ mod tests {
 
     #[test]
     fn div() {
-        let ffe_1 = TestFFE::<TestFF>::new(892);
-        let ffe_2 = TestFFE::<TestFF>::new(7);
+        let ffe_1 = SampleFFE::<SampleFF>::new(892);
+        let ffe_2 = SampleFFE::<SampleFF>::new(7);
         let new_ff = ffe_1 / ffe_2;
-        println!("{:?}", new_ff);
-        assert_eq!(new_ff, TestFFE { element: 460175195 });
+        assert_eq!(new_ff, SampleFFE { element: 460175195 });
 
-        let ffe_3 = TestFFE::<TestFF>::new(2);
-        let ffe_4 = TestFFE::<TestFF>::new(11);
+        let ffe_3 = SampleFFE::<SampleFF>::new(2);
+        let ffe_4 = SampleFFE::<SampleFF>::new(11);
         let new_ff = ffe_3 / ffe_4;
         assert_eq!(
             new_ff,
-            TestFFE {
+            SampleFFE {
                 element: 1464193397
             }
         );
@@ -388,17 +367,17 @@ mod tests {
 
     #[test]
     fn div_assign() {
-        let mut ffe_1 = TestFFE::<TestFF>::new(892);
-        let ffe_2 = TestFFE::<TestFF>::new(7);
+        let mut ffe_1 = SampleFFE::<SampleFF>::new(892);
+        let ffe_2 = SampleFFE::<SampleFF>::new(7);
         ffe_1 /= ffe_2;
-        assert_eq!(ffe_1, TestFFE { element: 460175195 });
+        assert_eq!(ffe_1, SampleFFE { element: 460175195 });
 
-        let mut ffe_3 = TestFFE::<TestFF>::new(2);
-        let ffe_4 = TestFFE::<TestFF>::new(11);
+        let mut ffe_3 = SampleFFE::<SampleFF>::new(2);
+        let ffe_4 = SampleFFE::<SampleFF>::new(11);
         ffe_3 /= ffe_4;
         assert_eq!(
             ffe_3,
-            TestFFE {
+            SampleFFE {
                 element: 1464193397
             }
         );
@@ -406,15 +385,15 @@ mod tests {
 
     #[test]
     fn pow() {
-        let ffe_1 = TestFFE::<TestFF>::new(76);
+        let ffe_1 = SampleFFE::<SampleFF>::new(76);
         let new_ff = ffe_1.pow(2);
-        assert_eq!(new_ff, TestFFE { element: 5776 });
+        assert_eq!(new_ff, SampleFFE { element: 5776 });
 
-        let ffe_2 = TestFFE::<TestFF>::new(700);
+        let ffe_2 = SampleFFE::<SampleFF>::new(700);
         let new_ff = ffe_2.pow(90);
         assert_eq!(
             new_ff,
-            TestFFE {
+            SampleFFE {
                 element: 1516783203
             }
         );
@@ -422,8 +401,16 @@ mod tests {
 
     #[test]
     fn is_order() {
-        // let ffe_1 = TestFFE::<TestFF>::new(76);
-        // let new_ff = ffe_1.is_order(order)
-        // assert_eq!(new_ff, TestFFE { element: 5776 });
+        #[derive(Debug, Clone, Copy, PartialEq)]
+        struct SampleFF1 {}
+
+        impl FF for SampleFF1 {
+            type FieldType = usize;
+            const MODULUS: usize = 71;
+        }
+
+        let ffe_1 = SampleFFE::<SampleFF1>::new(13);
+        let order: usize = 70;
+        assert!(ffe_1.is_order(order));
     }
 }
