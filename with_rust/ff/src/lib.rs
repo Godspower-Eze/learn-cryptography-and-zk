@@ -1,6 +1,6 @@
 use std::{
     fmt::Debug,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, Sub, SubAssign},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign},
     usize,
 };
 
@@ -41,6 +41,7 @@ pub trait FFE<F: FF>:
     + AddAssign
     + MulAssign
     + DivAssign
+    + Neg
 {
     fn from_field(element: isize) -> Self;
 
@@ -242,6 +243,18 @@ impl<F: FF<FieldType = usize> + Copy + PartialEq> DivAssign for SampleFFE<F> {
     fn div_assign(&mut self, rhs: Self) {
         let div = *self / rhs;
         *self = div;
+    }
+}
+
+impl<F: FF<FieldType = usize> + Copy + PartialEq> Neg for SampleFFE<F> {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        let neg = Self::zero()
+            - Self {
+                element: self.element,
+            };
+        neg
     }
 }
 
