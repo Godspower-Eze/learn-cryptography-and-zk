@@ -64,7 +64,7 @@ pub enum Error {
     FieldMismatch,
 }
 
-impl<F: FFE<S> + Neg<Output = F> + Sub<Output = F>, S: FF> UniPoly<F, S> {
+impl<F: FFE<S> + Neg<Output = F> + Sub<Output = F> + Add<Output = F>, S: FF> UniPoly<F, S> {
     fn interpolate(y_values: Vec<F>) -> Self {
         let mut x_values = vec![];
         for i in 0..y_values.len() {
@@ -75,12 +75,13 @@ impl<F: FFE<S> + Neg<Output = F> + Sub<Output = F>, S: FF> UniPoly<F, S> {
 
     fn interpolate_xy(x_values: Vec<F>, y_values: Vec<F>) -> Self {
         assert_eq!(x_values.len(), y_values.len());
-        let mut resulting_polynomial = Self::one();
+        let mut resulting_polynomial = Self::zero();
         for (x, y) in x_values.iter().zip(y_values.iter()) {
             let lagrange_polynomial = Self::get_lagrange_polynomial(*x, &x_values);
             let y_poly = Self::new(vec![*y]);
             let product = &y_poly * &lagrange_polynomial;
-            resulting_polynomial = resulting_polynomial + product;
+            println!("{:?}", product);
+            resulting_polynomial = &resulting_polynomial + &product;
         }
         resulting_polynomial
     }
@@ -133,17 +134,17 @@ impl<F: FFE<S> + AddAssign, S: FF> Mul for &UniPoly<F, S> {
     }
 }
 
-impl<F: FFE<S> + Add<Output = F>, S: FF> Add for UniPoly<F, S> {
+impl<F: FFE<S> + Add<Output = F>, S: FF> Add for &UniPoly<F, S> {
     type Output = UniPoly<F, S>;
 
     fn add(self, rhs: Self) -> Self::Output {
         if self.is_zero() {
-            rhs
+            rhs.clone()
         } else if rhs.is_zero() {
-            self
+            self.clone()
         } else {
-            let new_coefficients = add_list(self.coefficients, rhs.coefficients);
-            return UniPoly::new(new_coefficients);
+            let new_coefficients = add_list(self.coefficients.clone(), rhs.coefficients.clone());
+            UniPoly::new(new_coefficients)
         }
     }
 }
@@ -179,14 +180,6 @@ fn add_list<T: FFE<F> + Add<Output = T>, F: FF>(a: Vec<T>, b: Vec<T>) -> Vec<T> 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[derive(Debug, Clone, Copy, PartialEq)]
-    struct TestFF {}
-
-    impl FF for TestFF {
-        type FieldType = usize;
-        const MODULUS: usize = 3221225473;
-    }
 
     #[test]
     fn mul() {
@@ -225,15 +218,33 @@ mod tests {
     fn add() {
         // Test: (x^2 + x + 5) + (2x^2 + 4x + 2)
         let co_eff_1 = vec![SampleFFE::new(5), SampleFFE::new(1), SampleFFE::new(1)];
-        let poly_1 = UniPoly::<SampleFFE<SampleFF>, SampleFF>::new(co_eff_1);
+        let poly_1 = UniPoly::new(co_eff_1);
         let co_eff_2 = vec![SampleFFE::new(2), SampleFFE::new(4), SampleFFE::new(2)];
         let poly_2 = UniPoly::new(co_eff_2);
-        let actual = poly_1 + poly_2;
+        let actual = &poly_1 + &poly_2;
         let exp_co_effs = vec![SampleFFE::new(7), SampleFFE::new(5), SampleFFE::new(3)];
         let expected = UniPoly::<SampleFFE<SampleFF>, SampleFF>::new(exp_co_effs);
         assert_eq!(actual, expected);
 
         // Test: (x^3 - 3x + 2) * (2x + 5)
+        let co_eff_3 = vec![SampleFFE::new(5), SampleFFE::new(2)];
+        let poly_3 = UniPoly::new(co_eff_3);
+        let co_eff_4 = vec![
+            SampleFFE::new(2),
+            SampleFFE::new(-3),
+            SampleFFE::new(0),
+            SampleFFE::new(1),
+        ];
+        let poly_4 = UniPoly::new(co_eff_4);
+        let actual = &poly_3 + &poly_4;
+        let exp_co_effs = vec![
+            SampleFFE::new(7),
+            SampleFFE::new(-1),
+            SampleFFE::zero(),
+            SampleFFE::one(),
+        ];
+        let expected = UniPoly::<SampleFFE<SampleFF>, SampleFF>::new(exp_co_effs);
+        assert_eq!(actual, expected);
     }
 
     #[test]
@@ -246,5 +257,6 @@ mod tests {
             SampleFFE::new(4),
         ];
         let polynomial = UniPoly::<SampleFFE<SampleFF>, SampleFF>::interpolate(co_effs);
+        println!("{:?}", polynomial);
     }
 }

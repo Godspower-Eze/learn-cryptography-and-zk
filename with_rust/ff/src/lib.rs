@@ -22,7 +22,7 @@ impl Rem<usize> for ISize {
     }
 }
 
-pub trait FF: Debug {
+pub trait FF: Sized + Debug + Clone + Copy {
     type FieldType;
 
     const MODULUS: Self::FieldType;
@@ -270,6 +270,8 @@ mod tests {
         assert_eq!(mi_2, Ok(19));
         let mi_2 = multiplicative_inverse(10, 5);
         assert!(mi_2.is_err());
+        let mi_2 = multiplicative_inverse(6, 3221225473);
+        println!("{:?}", mi_2);
     }
 
     #[test]
