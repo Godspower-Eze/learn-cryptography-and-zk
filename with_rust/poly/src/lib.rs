@@ -1,4 +1,4 @@
-use ff::{SampleFF, SampleFFE, FF, FFE};
+use ff::{FF, FFE};
 use std::marker::PhantomData;
 use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 
@@ -51,7 +51,7 @@ impl<F: FFE<S>, S: FF> Polynomial<F> for UniPoly<F, S> {
     }
 
     fn degree(&self) -> usize {
-        if self.coefficients.is_empty() {
+        if self.is_zero() {
             0
         } else {
             self.coefficients.len() - 1
@@ -180,6 +180,7 @@ fn add_list<T: FFE<F> + Add<Output = T>, F: FF>(a: Vec<T>, b: Vec<T>) -> Vec<T> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ff::{SampleFF, SampleFFE};
 
     #[test]
     fn mul() {
