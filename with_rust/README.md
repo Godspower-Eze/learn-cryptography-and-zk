@@ -6,3 +6,4 @@ This focuses mainly on implementations from Proofs, Arguments and Zero Knowledge
 
 - [Finite Field](/with_rust/ff/)
 - [Univariate Polynomial](/with_rust/poly/)
+- [Shamir Secret Sharing](/with_rust/sss/)

@@ -16,6 +16,16 @@ pub trait Polynomial<F>: Sized {
     fn one() -> Self;
 }
 
+pub trait UnivariatePolynomial<F>: Polynomial<F> {
+    fn evaluate(&self, x: F) -> F;
+
+    fn interpolate(y_values: Vec<F>) -> Self;
+
+    fn interpolate_xy(x_values: Vec<F>, y_values: Vec<F>) -> Self;
+
+    fn get_lagrange_polynomial(x_value: F, x_values: &Vec<F>) -> Self;
+}
+
 // Univariate Polynomial
 #[derive(Debug, PartialEq, Clone)]
 pub struct UniPoly<F, S> {
@@ -59,12 +69,19 @@ impl<F: FFE<S>, S: FF> Polynomial<F> for UniPoly<F, S> {
     }
 }
 
-#[derive(Debug)]
-pub enum Error {
-    FieldMismatch,
-}
+impl<F: FFE<S> + Neg<Output = F> + Sub<Output = F> + Add<Output = F>, S: FF> UnivariatePolynomial<F>
+    for UniPoly<F, S>
+{
+    fn evaluate(&self, var: F) -> F {
+        let mut identity = F::zero();
+        for (i, x) in self.coefficients.iter().enumerate() {
+            let exp = var.pow(i);
+            let mul = exp * *x;
+            identity += mul
+        }
+        identity
+    }
 
-impl<F: FFE<S> + Neg<Output = F> + Sub<Output = F> + Add<Output = F>, S: FF> UniPoly<F, S> {
     fn interpolate(y_values: Vec<F>) -> Self {
         let mut x_values = vec![];
         for i in 0..y_values.len() {
@@ -80,7 +97,6 @@ impl<F: FFE<S> + Neg<Output = F> + Sub<Output = F> + Add<Output = F>, S: FF> Uni
             let lagrange_polynomial = Self::get_lagrange_polynomial(*x, &x_values);
             let y_poly = Self::new(vec![*y]);
             let product = &y_poly * &lagrange_polynomial;
-            println!("{:?}", product);
             resulting_polynomial = &resulting_polynomial + &product;
         }
         resulting_polynomial
@@ -95,12 +111,12 @@ impl<F: FFE<S> + Neg<Output = F> + Sub<Output = F> + Add<Output = F>, S: FF> Uni
          *      `j` is the index in the loop below
          */
         let mut resulting_polynomial = Self::one();
-        for j in 0..x_values.len() {
-            if F::new(j.try_into().unwrap()) == x_value {
+        for x in x_values.iter() {
+            if *x == x_value {
                 continue;
             }
-            let numerator = Self::new(vec![-x_values[j], F::one()]);
-            let inverse_of_denominator = Self::new(vec![(x_value - x_values[j]).inverse()]);
+            let numerator = Self::new(vec![-(*x), F::one()]);
+            let inverse_of_denominator = Self::new(vec![(x_value - *x).inverse()]);
             let product = &numerator * &inverse_of_denominator;
             // TODO: implement mul_assign() for &UniPoly
             resulting_polynomial = &resulting_polynomial * &product;
@@ -257,7 +273,8 @@ mod tests {
             SampleFFE::new(2),
             SampleFFE::new(4),
         ];
-        let polynomial = UniPoly::<SampleFFE<SampleFF>, SampleFF>::interpolate(co_effs);
+        let polynomial: UniPoly<SampleFFE<SampleFF>, SampleFF> =
+            UniPoly::<SampleFFE<SampleFF>, SampleFF>::interpolate(co_effs);
         println!("{:?}", polynomial);
     }
 }

@@ -124,6 +124,7 @@ pub fn multiplicative_inverse(a: isize, b: isize) -> Result<usize, String> {
         m = b;
         n = a;
     }
+    println!("{:?}:{:?}", m, n);
     let mut q = m / n; // quotient
     let mut r = m % n; // remainder
     let mut t_0 = 0;
@@ -270,8 +271,6 @@ mod tests {
         assert_eq!(mi_2, Ok(19));
         let mi_2 = multiplicative_inverse(10, 5);
         assert!(mi_2.is_err());
-        let mi_2 = multiplicative_inverse(6, 3221225473);
-        println!("{:?}", mi_2);
     }
 
     #[test]

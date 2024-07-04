@@ -2,5 +2,5 @@
 members = [
     "ff",
     "poly"
-, "stark101"]
+, "sss", "stark101"]
 resolver = "2"
