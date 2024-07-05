@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 ff = { path = "../ff"}
 poly = { path = "../poly" }
+rand = "*"
 

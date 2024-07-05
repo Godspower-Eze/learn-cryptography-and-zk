@@ -124,7 +124,6 @@ pub fn multiplicative_inverse(a: isize, b: isize) -> Result<usize, String> {
         m = b;
         n = a;
     }
-    println!("{:?}:{:?}", m, n);
     let mut q = m / n; // quotient
     let mut r = m % n; // remainder
     let mut t_0 = 0;

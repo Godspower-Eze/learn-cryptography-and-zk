@@ -19,9 +19,9 @@ pub trait Polynomial<F>: Sized {
 pub trait UnivariatePolynomial<F>: Polynomial<F> {
     fn evaluate(&self, x: F) -> F;
 
-    fn interpolate(y_values: Vec<F>) -> Self;
+    fn interpolate(y_values: &Vec<F>) -> Self;
 
-    fn interpolate_xy(x_values: Vec<F>, y_values: Vec<F>) -> Self;
+    fn interpolate_xy(x_values: &Vec<F>, y_values: &Vec<F>) -> Self;
 
     fn get_lagrange_polynomial(x_value: F, x_values: &Vec<F>) -> Self;
 }
@@ -82,15 +82,15 @@ impl<F: FFE<S> + Neg<Output = F> + Sub<Output = F> + Add<Output = F>, S: FF> Uni
         identity
     }
 
-    fn interpolate(y_values: Vec<F>) -> Self {
+    fn interpolate(y_values: &Vec<F>) -> Self {
         let mut x_values = vec![];
         for i in 0..y_values.len() {
             x_values.push(F::new(i.try_into().unwrap()));
         }
-        Self::interpolate_xy(x_values, y_values)
+        Self::interpolate_xy(&x_values, y_values)
     }
 
-    fn interpolate_xy(x_values: Vec<F>, y_values: Vec<F>) -> Self {
+    fn interpolate_xy(x_values: &Vec<F>, y_values: &Vec<F>) -> Self {
         assert_eq!(x_values.len(), y_values.len());
         let mut resulting_polynomial = Self::zero();
         for (x, y) in x_values.iter().zip(y_values.iter()) {
@@ -274,7 +274,7 @@ mod tests {
             SampleFFE::new(4),
         ];
         let polynomial: UniPoly<SampleFFE<SampleFF>, SampleFF> =
-            UniPoly::<SampleFFE<SampleFF>, SampleFF>::interpolate(co_effs);
+            UniPoly::<SampleFFE<SampleFF>, SampleFF>::interpolate(&co_effs);
         println!("{:?}", polynomial);
     }
 }
