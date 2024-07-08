@@ -6,7 +6,7 @@ Let's see how Shamir Secret Sharing works.
 
 ## How does it work?
 
-Alice has a secret number $y$ that she wants to keep hidden but she also wants to hide it in plain sight. She decides to hide it using a polynomial.
+Alice has a secret number $y$ that she wants to keep hidden but she also wants to hide it in plain sight. She decides to hide it using the points of a polynomial.
 
 - She creates a point: $(0, y)$
 - Generates multiple other points $(x_i, y_i)$ where $(0, y)$ is labelled $(x_0, y_0)$ and the number of extra points needed depends on the degree of the polynomial. That is, a polynomial of degree 2(quadratic) needs three points so she generates two other points $(x_1, y_1)$ and $(x_2, y_2)$. A polynomial of degree $n$ requires $n + 1$ points.
