@@ -1,5 +1,4 @@
 use std::{
-    collections::HashSet,
     marker::PhantomData,
     ops::{Add, Neg, Sub},
 };
@@ -7,165 +6,116 @@ use std::{
 use rand::Rng;
 
 use ff::{FF, FFE};
-use poly::{UniPoly, UnivariatePolynomial};
+use poly::{Polynomial, UniPoly, UnivariatePolynomial};
 
 #[derive(Debug, Clone)]
-pub struct SSS<P, F, S> {
-    secret_y: F,
-    polynomial: P,
-    points: Vec<(F, F)>,
-    _field: PhantomData<S>,
+pub struct SSS<E, F> {
+    _field_element: PhantomData<E>,
+    _field: PhantomData<F>,
 }
 
-pub enum STRATEGY {
-    FIRST,
-    LAST,
-    RANDOM,
-}
-
-pub enum Error {
-    InvalidPoint,
-}
-
-impl<
-        P: UnivariatePolynomial<F>,
-        F: FFE<S> + Add<Output = F> + Sub<Output = F> + Neg<Output = F>,
-        S: FF,
-    > SSS<P, F, S>
+impl<F: FF<FieldType = usize>, E: FFE<F> + Neg<Output = E> + Sub<Output = E> + Add<Output = E>>
+    SSS<E, F>
 {
-    pub fn add_points(&mut self, point: (F, F)) -> Result<(F, F), Error> {
-        if !self.points.contains(&point) {
-            let (x_var, _) = point;
-            for (x, _) in self.points.iter() {
-                if *x == x_var {
-                    return Err(Error::InvalidPoint);
-                }
+    fn generate_polynomial(degree: usize) -> (E, UniPoly<E, F>, Vec<E>) {
+        let mut rng = rand::thread_rng();
+        let modulus = F::MODULUS;
+        let zero = E::zero();
+        let secret = E::new(rng.gen_range(0..modulus).try_into().unwrap());
+        let mut x_values = vec![zero];
+        let mut y_values = vec![secret];
+        while x_values.len() != (degree + 1) {
+            let x = E::new(rng.gen_range(0..modulus).try_into().unwrap());
+            let y = E::new(rng.gen_range(0..modulus).try_into().unwrap());
+            if !x_values.contains(&x) {
+                x_values.push(x);
+                y_values.push(y);
+            } else {
+                continue;
             }
-            self.points.push(point);
-            return Ok(point);
-        } else {
-            return Err(Error::InvalidPoint);
         }
+        let poly = UniPoly::interpolate_xy(&x_values, &y_values);
+        return (secret, poly, x_values);
     }
 
-    fn evaluate(points: &Vec<(F, F)>) -> F {
+    pub fn generate(degree: usize, num_of_points: usize) -> (E, Vec<(E, E)>) {
+        let (mut secret, mut poly, mut x_values) = Self::generate_polynomial(degree);
+        while poly.degree() != degree {
+            (secret, poly, x_values) = Self::generate_polynomial(degree);
+        }
+        let mut rng = rand::thread_rng();
+        let modulus = F::MODULUS;
+
+        let mut new_x_values = vec![];
+        let mut y_values = vec![];
+
+        while new_x_values.len() != num_of_points {
+            let x = E::new(rng.gen_range(0..modulus).try_into().unwrap());
+            if !x_values.contains(&x) {
+                new_x_values.push(x);
+                let y = poly.evaluate(x);
+                y_values.push(y);
+            } else {
+                continue;
+            }
+        }
+
+        let mut points = vec![];
+        for (x, y) in new_x_values.iter().zip(y_values.iter()) {
+            points.push((*x, *y));
+        }
+        return (secret, points);
+    }
+
+    pub fn recover(secret: E, points: &Vec<(E, E)>) -> bool {
         let mut x_values = vec![];
         let mut y_values = vec![];
         for (x, y) in points.iter() {
             x_values.push(*x);
-            y_values.push(*y);
+            y_values.push(*y)
         }
-        let poly = UniPoly::<F, S>::interpolate_xy(&x_values, &y_values);
-        let eval = poly.evaluate(F::zero());
-        return eval;
-    }
-
-    pub fn compute(self, point_strategy: STRATEGY) -> bool {
-        if self.polynomial.degree() + 1 < self.points.len() {
-            return false;
-        } else {
-            let number_of_points = self.polynomial.degree() + 1;
-            match point_strategy {
-                STRATEGY::FIRST => {
-                    let points = self.points[..number_of_points].to_vec();
-                    let f_of_zero = Self::evaluate(&points);
-                    return self.secret_y == f_of_zero;
-                }
-                STRATEGY::LAST => {
-                    let length = self.points.len();
-                    let diff = length - number_of_points;
-                    let points = self.points[diff..].to_vec();
-                    let f_of_zero = Self::evaluate(&points);
-                    return self.secret_y == f_of_zero;
-                }
-                STRATEGY::RANDOM => {
-                    let mut rng = rand::thread_rng();
-                    let mut random_indexes: HashSet<usize> = HashSet::new();
-                    while random_indexes.len() < number_of_points {
-                        let index = rng.gen_range(0..number_of_points);
-                        random_indexes.insert(index);
-                    }
-                    let mut points: Vec<(F, F)> = vec![];
-                    for i in random_indexes.into_iter() {
-                        points.push(self.points[i]);
-                    }
-                    let f_of_zero = Self::evaluate(&points);
-                    return self.secret_y == f_of_zero;
-                }
-            }
-        }
+        let poly = UniPoly::interpolate_xy(&x_values, &y_values);
+        return secret == poly.evaluate(E::zero());
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use ff::{SampleFF, SampleFFE, FFE};
-    use poly::{Polynomial, UniPoly};
+
+    use ff::{SampleFF, SampleFFE};
 
     use super::*;
 
     #[test]
-    fn add_points() {
-        let coefficients: Vec<SampleFFE<SampleFF>> = vec![
-            SampleFFE::new(-6),
-            SampleFFE::new(11),
-            SampleFFE::new(-6),
-            SampleFFE::new(1),
-        ];
-        let points: Vec<(SampleFFE<SampleFF>, SampleFFE<SampleFF>)> = vec![];
-        let polynomial = UniPoly::new(coefficients);
-        let mut sss = SSS {
-            secret_y: SampleFFE::new(2),
-            polynomial,
-            points,
-            _field: PhantomData,
-        };
-        assert_eq!(sss.points.len(), 0);
+    fn sss() {
+        let degree = 5;
+        let num_of_points = 20;
+        let (secret, points) =
+            SSS::<SampleFFE<SampleFF>, SampleFF>::generate(degree, num_of_points);
+        // True Cases
+        assert!(SSS::recover(secret, &points));
+        assert!(SSS::recover(secret, &points[..15].to_vec()));
+        assert!(SSS::recover(secret, &points[..10].to_vec()));
+        assert!(SSS::recover(secret, &points[..6].to_vec()));
+        assert!(SSS::recover(secret, &points[5..].to_vec()));
+        assert!(SSS::recover(secret, &points[11..].to_vec()));
+        assert!(SSS::recover(secret, &points[14..].to_vec()));
+        // False Cases
+        assert!(!SSS::recover(secret, &points[15..].to_vec()));
+        assert!(!SSS::recover(secret, &points[16..].to_vec()));
+        assert!(!SSS::recover(secret, &points[..5].to_vec()));
+        assert!(!SSS::recover(secret, &points[..4].to_vec()));
 
-        let point1 = (SampleFFE::new(23), SampleFFE::new(45));
-        let point2 = (SampleFFE::new(34), SampleFFE::new(78));
-
-        assert!(sss.add_points(point1).is_ok());
-        assert!(sss.add_points(point2).is_ok());
-
-        assert_eq!(sss.points.len(), 2);
-
-        assert!(sss.add_points(point1).is_err());
-
-        let point3 = (SampleFFE::new(23), SampleFFE::new(91));
-
-        assert!(sss.add_points(point3).is_err());
-        assert_eq!(sss.points.len(), 2);
-    }
-
-    #[test]
-    fn compute() {
-        let coefficients: Vec<SampleFFE<SampleFF>> = vec![
-            SampleFFE::new(-6),
-            SampleFFE::new(11),
-            SampleFFE::new(-6),
-            SampleFFE::new(1),
-        ];
-        let points: Vec<(SampleFFE<SampleFF>, SampleFFE<SampleFF>)> = vec![];
-        let polynomial = UniPoly::new(coefficients);
-        let mut sss = SSS {
-            secret_y: SampleFFE::new(-6),
-            polynomial,
-            points,
-            _field: PhantomData,
-        };
-        let point1 = (SampleFFE::new(5), SampleFFE::new(24));
-        let point2 = (SampleFFE::new(7), SampleFFE::new(120));
-        let point3 = (SampleFFE::new(9), SampleFFE::new(336));
-        let point4 = (SampleFFE::new(11), SampleFFE::new(720));
-
-        let _ = sss.add_points(point1);
-        let _ = sss.add_points(point2);
-        let _ = sss.add_points(point3);
-        let _ = sss.add_points(point4);
-
-        assert!(sss.clone().compute(STRATEGY::FIRST));
-        assert!(sss.clone().compute(STRATEGY::LAST));
-        assert!(sss.compute(STRATEGY::RANDOM));
+        let mut points = vec![];
+        let mut rng = rand::thread_rng();
+        for _ in 0..20 {
+            let x = SampleFFE::new(rng.gen_range(0..SampleFF::MODULUS).try_into().unwrap());
+            let y = SampleFFE::new(rng.gen_range(0..SampleFF::MODULUS).try_into().unwrap());
+            points.push((x, y));
+        }
+        assert!(!SSS::recover(secret, &points));
+        assert!(!SSS::recover(secret, &points[..15].to_vec()));
+        assert!(!SSS::recover(secret, &points[..10].to_vec()));
+        assert!(!SSS::recover(secret, &points[..6].to_vec()));
     }
 }
