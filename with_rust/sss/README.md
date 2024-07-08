@@ -16,3 +16,18 @@ Alice has a secret number $y$ that she wants to keep hidden but she also wants t
 - Alice has successfully hidden and stored the secret $y$ in a polynomial.
 - To recover this secret, she gets at least $n + 1$ points and then, performs lagrange interpolation on it to get a polynomial.
 - If all points are correct, then an evaluation of the polynomial at $0$ should give $y$.
+
+As shown in the code, we use finite field elements to amplify the security of this.
+
+## Code
+
+```rust
+let degree = 5;
+let nums = 20;
+
+let (secret, points) = SSS::<F, E>::generate(degree, num);
+
+assert!(SSS::recover(secret, &points));
+```
+
+Full code [here](./src/lib.rs)
