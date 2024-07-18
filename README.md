@@ -6,6 +6,14 @@ A collection of cryptographic and zero-knowledge algorithms implemented from scr
 
 ## Implementations
 
+### Rust
+
+This focuses mainly on implementations from Proofs, Arguments and Zero Knowledge (By Justin Thaler).
+
+- [Finite Field](/with_rust/ff/)
+- [Univariate Polynomial](/with_rust/poly/)
+- [Shamir Secret Sharing](/with_rust/sss/)
+
 ### Python
 
 This focuses mainly on traditional cryptography with a bit of blockchain cryptography
@@ -51,14 +59,6 @@ This focuses mainly on traditional cryptography with a bit of blockchain cryptog
 - [Naive Elliptic Curve](/with_python/utils/ecc.py)
 - [Bandersnatch Curve](/with_python/utils/ecc/bandersnatch/curve.py)
 - [Bandersnatch Field](/with_python/utils/ecc/bandersnatch/fields.py)
-
-### Rust
-
-This focuses mainly on implementations from Proofs, Arguments and Zero Knowledge (By Justin Thaler).
-
-- [Finite Field](/with_rust/ff/)
-- [Univariate Polynomial](/with_rust/poly/)
-- [Shamir Secret Sharing](/with_rust/sss/)
 
 ## Usage
 
